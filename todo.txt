@@ -1,0 +1,14 @@
+
+parsing du fichier de configuration (comme le server block de nginx) et regles de parsing a definir (assez libre)
+gestion des sockets (structures, socket(), listen(), accept())
+gestion du non bloquant avec poll() ou autre
+send() et recv() avec le client
+parsing des requetes client (GET, POST, DELETE)
+gestion des differents status (301, 400, 500...)
+gestion de l'acces aux fichiers (envoie et upload)
+gestion des signaux (control C quitter proprement)
+gestion des erreurs de fonction
+gestion de la memoire (pas de crash)
+gestion de la securite de base (restriction d'acces)
+CGI
+stress test
