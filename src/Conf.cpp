@@ -1,5 +1,6 @@
 #include "Conf.hpp"
-
+#include <fstream>
+#include <iostream>
 
 bool isValidErrorCode(int code)
 {
@@ -13,5 +14,23 @@ bool isValidPort(int port)
 
 void Configuration::init(const char *filename)
 {
+	std::ifstream file;
+	std::string line;
+
+	file.open(filename, std::ios::in);
+
+	if (!file.is_open())
+	{
+   		std::cerr << "Failed to open file.";
+    	return ; //maybe throw ?
+	}
+
+
+	while (getline(file, line))
+	{
+		std::cout << line << std::endl;
+	}
+
+	file.close();
 	//parse the file here and set the virtual servers structures
 }

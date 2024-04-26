@@ -1,4 +1,4 @@
-#pragma one
+#pragma once
 
 #include <map>
 #include <vector>
@@ -11,10 +11,16 @@ enum methods
 	DELETE
 };
 
+struct acceptedMethod
+{
+    enum methods method;
+    bool accepted;
+};
+
 struct Route
 {
 	std::string location;
-	std::tuple<enum methods, bool> methods[3];
+	acceptedMethod methods[3];
 	std::vector<std::string> redirections;
 	bool directoryListing;
 	std::string defaultFile;

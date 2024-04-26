@@ -1,10 +1,12 @@
 NAME := webserv
 CC := c++
 CFLAGS := -Wall -Wextra -Werror -std=c++98
-SRCS = main.cpp
 OBJ_DIR := obj
-OBJS := $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
-HEADERS := *.hpp
+SRC_DIR := src
+SRCS = main.cpp Conf.cpp
+SRCS := $(SRCS:%=$(SRC_DIR)/%)
+OBJS := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+HEADERS := src/*.hpp
 DIR_DUP = mkdir -p $(@D)
 
 all: $(NAME)
@@ -12,7 +14,7 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	$(CC) -o $@ $^
 
-$(OBJ_DIR)/%.o: %.cpp $(HEADERS)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS)
 	@$(DIR_DUP)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
