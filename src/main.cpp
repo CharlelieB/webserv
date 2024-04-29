@@ -1,10 +1,12 @@
 #include <iostream>
 #include "Conf.hpp"
-#include "Token.hpp"
+#include "Lexer.hpp"
+#include "Parser.hpp"
 
 int	main(int argc, char **argv)
 {
-	TokenRegistry tok;
+	Lexer lex;
+	Configuration config;
 
 	if (argc != 2)
 	{
@@ -12,6 +14,8 @@ int	main(int argc, char **argv)
 		return 1;
 	}
 
-	tok.lex(argv[1]);
-	tok.parse();
+	lex.scan(argv[1]);
+
+	Parser parser(lex.getTokens(), config);
+	parser.parseConfig();
 }

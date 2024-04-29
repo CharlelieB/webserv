@@ -1,9 +1,9 @@
-#include "Token.hpp"
+#include "Lexer.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
-const TokenRegistry::Token TokenRegistry::tokens[] = {
+const Token Lexer::tokens[] = {
 		{ "{", O_BRACKET, SEPARATOR },
 		{ "}", C_BRACKET, SEPARATOR },
 		{ ";", SEMICOLON, SEPARATOR },
@@ -13,7 +13,7 @@ const TokenRegistry::Token TokenRegistry::tokens[] = {
 	};
 
 
-const TokenRegistry::Token TokenRegistry::findToken(const char & c)
+const Token Lexer::findToken(const char & c)
 {
 	switch(c)
 	{
@@ -34,8 +34,7 @@ const TokenRegistry::Token TokenRegistry::findToken(const char & c)
 	}
 }
 
-TokenRegistry::Token TokenRegistry::makeToken(const std::string &value, const enum tokenType type,
-enum tokenType generic)
+Token Lexer::makeToken(const std::string &value, const tokenType type, tokenType generic)
 {
 	Token token;
 	
@@ -45,7 +44,7 @@ enum tokenType generic)
 	return token;
 }
 
-void TokenRegistry::tokenize(const std::string& str)
+void Lexer::tokenize(const std::string& str)
 {
 	Token token;
 
@@ -80,7 +79,7 @@ void TokenRegistry::tokenize(const std::string& str)
 	}
 }
 
-void TokenRegistry::lex(const char *filename)
+void Lexer::scan(const char *filename)
 {
 	std::ifstream file;
 	std::string line;
@@ -108,20 +107,4 @@ void TokenRegistry::lex(const char *filename)
 	}
 }
 
-// void TokenRegistry::parse() const
-// {
-
-
-// 	    std::unique_ptr<ASTNode> parse() {
-//         auto root = std::make_unique<RootNode>();
-//         while (!isAtEnd()) {
-//             if (check(WORD) && peek().lexeme == "server" && checkNext(OPEN_BRACE)) {
-//                 root->addChild(parseServerBlock());
-//             } else {
-//                 advance();  // Skip tokens until a recognizable pattern starts
-//             }
-//         }
-//         return root;
-//     }
-
-// }
+const std::vector<Token>& Lexer::getTokens() const { return tokenVec; }
