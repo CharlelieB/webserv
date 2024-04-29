@@ -1,9 +1,9 @@
 NAME := webserv
 CC := c++
-CFLAGS := -Wall -Wextra -Werror -std=c++98
+CFLAGS := -Wall -Wextra -Werror -g3 -std=c++98
 OBJ_DIR := obj
 SRC_DIR := src
-SRCS = main.cpp Conf.cpp
+SRCS = main.cpp Conf.cpp Token.cpp
 SRCS := $(SRCS:%=$(SRC_DIR)/%)
 OBJS := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 HEADERS := src/*.hpp

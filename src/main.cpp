@@ -1,9 +1,10 @@
 #include <iostream>
 #include "Conf.hpp"
+#include "Token.hpp"
 
 int	main(int argc, char **argv)
 {
-	Configuration conf;
+	TokenRegistry tok;
 
 	if (argc != 2)
 	{
@@ -11,5 +12,6 @@ int	main(int argc, char **argv)
 		return 1;
 	}
 
-	conf.init(argv[1]);
+	tok.lex(argv[1]);
+	tok.parse();
 }

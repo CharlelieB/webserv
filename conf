@@ -1,7 +1,19 @@
-server { listen	80;
+server {
+	listen	80;
 	server_name example.org www.example.org;
 	error_page 404 /custom_404.html;
 	location = /custom_404.html {
+		root /usr/share/nginx/html;
+		internal;
+	}
+	client_max_body_size 1m;
+}
+
+server {
+	listen	80;
+	server_name nassim.fr;
+	error_page 404 /custom_404.html;
+	location / {
 		root /usr/share/nginx/html;
 		internal;
 	}
