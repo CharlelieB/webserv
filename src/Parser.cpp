@@ -29,10 +29,18 @@ bool Parser::checkWord(const std::string &str) const
 	return tokens[current].value == str;
 }
 
+Token Parser::consumeWord(const std::string &str, const std::string& errorMessage)
+{
+	if (tokens[current].value != str)
+		throw std::runtime_error(errorMessage);
+	return tokens[current++];
+}
+
 Token Parser::consume(tokenType type, const std::string& errorMessage)
 {
-    if (!check(type)) throw std::runtime_error(errorMessage);
-    	return tokens[current++];
+    if (!check(type))
+		throw std::runtime_error(errorMessage);
+    return tokens[current++];
 }
 
 // void Parser::parseInstruction(std::string& value, int args)
@@ -44,7 +52,6 @@ Token Parser::consume(tokenType type, const std::string& errorMessage)
 // 	if (!check(SEMICOLON))
 // 		throw std::runtime_error("instruction parse error :")
 // }
-
 
 void Parser::parseString(std::string &str)
 {
@@ -64,7 +71,7 @@ void Parser::parseInt(int &n)
         throw std::runtime_error("Expect an integer");
     }
 	ss >> n;
-	consume(SEMICOLON, "Expect at the end of instruction");
+	consume(SEMICOLON, "Expect ; at the end of instruction");
 }
 
 void Parser::parseMultipleString(std::vector<std::string> &vec)
@@ -75,9 +82,20 @@ void Parser::parseMultipleString(std::vector<std::string> &vec)
 		consume(WORD, "Expect an argument for the instruction");
 		vec.push_back(std::string(currentTokenValue()));
 	}
-	consume(SEMICOLON, "Expect at the end of instruction");
+	consume(SEMICOLON, "Expect ; at the end of instruction");
 }
 
+void Parser::handleListen(ServerConfig& config, const std::string& arg);
+void Parser::handleServerName(ServerConfig& config, const std::string& arg);
+void Parser::handleErrorPage(ServerConfig& config, const std::string& arg);
+void Parser::handleMaxBodySize(ServerConfig& config, const std::string& arg);
+
+void Parser::setupHandlers() {
+    directiveHandlers["listen"] = handleListen;
+    directiveHandlers["server_name"] = handleServerName;
+    directiveHandlers["error_page"] = handleErrorPage;
+    directiveHandlers["client_max_body_size"] = handleMaxBodySize;
+}
 
 void Parser::parseServerBlock()
 {
@@ -85,34 +103,42 @@ void Parser::parseServerBlock()
 
 	while (!isAtEnd())
 	{
-		if (check(O_BRACKET))
+		if (check(C_BRACKET))
 		{
 			return this->config.setServers(server);
 		}
-		// if (check(WORD))
-		// {
-		// 	if (checkWord("listen"))
-		// 	{
-		// 		parseString(server.host);
-		// 	}
-		// 	if (checkWord("root"))
-		// 	{
-		// 		parseString(server.rootDirectory);
-		// 	}
-		// 	else if (checkWord("server_name"))
-		// 	{
-		// 		parseMultipleString(server.serverNames);
-		// 	}
-		// 	else if (checkWord("error_page"))
-		// 	{}
-		// 	else if (checkWord("location")) {
-		// 		server.locations.push_back(parseLocationBlock());
-		// 	}
-		// 	else
-		// 	{
-		// 		throw std::runtime_error("bad instruction");
-		// 	}
-        // }
+		if (check(WORD))
+		{
+			//create vectors of instructions
+			std::vector<std::string> instructions;
+			parseInstruction(instructions);
+			if (checkWord("listen"))
+			{
+				parseString(server.host);
+			}
+			else if (checkWord("root"))
+			{
+				parseString(server.rootDirectory);
+			}
+			else if (checkWord("server_name"))
+			{
+				parseMultipleString(server.serverNames);
+			}
+			else if (checkWord("error_page"))
+			{}
+			// else if (checkWord("location")) {
+			// 	server.locations.push_back(parseLocationBlock());
+			// }
+			else
+			{
+				throw std::runtime_error("bad instruction");
+			}
+        }
+		else
+		{
+			throw std::runtime_error("server block");
+		}
+		advance();
     }
 	throw std::runtime_error("server block");
 }
@@ -130,12 +156,22 @@ void Parser::parseConfig()
 	{
         if (check(WORD) && checkWord("server") && checkNext(O_BRACKET))
 		{
-			advance();
-        	this->parseServerBlock();
-        }
+			current += 2;
+			//advance();
+			try
+			{
+        		this->parseServerBlock();
+			}
+			catch(std::runtime_error& e)
+			{
+				std::cout << e.what() << " parse error near " << tokens[current].value << std::endl;
+				return ;
+			}
+	    }
 		else
 		{
             std::cerr << "parse error near " << tokens[current].value << std::endl; 
+			return ;
         }
 	}
 }

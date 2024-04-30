@@ -33,10 +33,16 @@ class Parser
 		void advance();
 
 		Token consume(tokenType type, const std::string& errorMessage);
+		Token consumeWord(const std::string &str, const std::string& errorMessage);
 		const std::string& currentTokenValue() const;
+		
+		void setupHandlers();
 	private:
 		size_t current;
 	    const std::vector<Token>& tokens;
 		Node root;
 		Configuration& config;
+
+		typedef void (*HandlerFunction)(Configuration&, const std::string&);
+		std::map<std::string, HandlerFunction> directiveHandlers;
 };
