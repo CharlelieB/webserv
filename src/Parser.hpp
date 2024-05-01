@@ -5,13 +5,6 @@
 #include "Token.hpp"
 #include "Conf.hpp"
 
-struct Node
-{
-	Token *token;
-	Node *right;
-	Node *left;
-};
-
 class Parser
 {
 	public:
@@ -19,7 +12,7 @@ class Parser
 
 		void parseConfig();
 		void parseServerBlock();
-		void parseInstruction(std::string& value, int args);
+		void parseInstruction(std::vector<std::string>& args);
 
 
 		void parseString(std::string &str);
@@ -37,12 +30,16 @@ class Parser
 		const std::string& currentTokenValue() const;
 		
 		void setupHandlers();
+
+		void handleListen(VirtualServer& server, const std::vector<std::string>& args);
+		void handleServerName(VirtualServer& server, const std::vector<std::string>& args);
+		void handleErrorPage(VirtualServer& server, const std::vector<std::string>& args);
+		void handleMaxBodySize(VirtualServer& server, const std::vector<std::string>& args);	
 	private:
 		size_t current;
 	    const std::vector<Token>& tokens;
-		Node root;
 		Configuration& config;
 
-		typedef void (*HandlerFunction)(Configuration&, const std::string&);
+		typedef void (Parser::*HandlerFunction)(VirtualServer& server, const std::vector<std::string>&);
 		std::map<std::string, HandlerFunction> directiveHandlers;
 };

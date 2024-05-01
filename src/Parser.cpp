@@ -43,15 +43,18 @@ Token Parser::consume(tokenType type, const std::string& errorMessage)
     return tokens[current++];
 }
 
-// void Parser::parseInstruction(std::string& value, int args)
-// {
-// 	while (!isAtEnd() && args-- > 0)
-// 	{
-
-// 	}
-// 	if (!check(SEMICOLON))
-// 		throw std::runtime_error("instruction parse error :")
-// }
+void Parser::parseInstruction(std::vector<std::string>& args)
+{
+	while (!isAtEnd())
+	{
+		if (check(WORD))
+			args.push_back(tokens[current++].value);
+		else
+			break;
+	}
+	if (!check(SEMICOLON))
+		throw std::runtime_error("instruction parse error :");
+}
 
 void Parser::parseString(std::string &str)
 {
@@ -85,16 +88,36 @@ void Parser::parseMultipleString(std::vector<std::string> &vec)
 	consume(SEMICOLON, "Expect ; at the end of instruction");
 }
 
-void Parser::handleListen(ServerConfig& config, const std::string& arg);
-void Parser::handleServerName(ServerConfig& config, const std::string& arg);
-void Parser::handleErrorPage(ServerConfig& config, const std::string& arg);
-void Parser::handleMaxBodySize(ServerConfig& config, const std::string& arg);
+void Parser::handleListen(VirtualServer& server, const std::vector<std::string>& args)
+{
+	if (args.size() != 2)
+		throw std::runtime_error("listen wrong arguments");
+	
+}
 
-void Parser::setupHandlers() {
-    directiveHandlers["listen"] = handleListen;
-    directiveHandlers["server_name"] = handleServerName;
-    directiveHandlers["error_page"] = handleErrorPage;
-    directiveHandlers["client_max_body_size"] = handleMaxBodySize;
+void Parser::handleServerName(VirtualServer& server, const std::vector<std::string>& args)
+{
+	if (args.size() < 2 || args.size() > 1000)
+		throw std::runtime_error("server name wrong arguments");
+	for (std::vector<std::string>::const_iterator it = args.begin() + 1; it != args.end(); ++it)
+		server.serverNames.push_back(*it);
+}
+void Parser::handleErrorPage(VirtualServer& server, const std::vector<std::string>& args)
+{
+
+}
+
+void Parser::handleMaxBodySize(VirtualServer& server, const std::vector<std::string>& args)
+{
+	
+}
+
+void Parser::setupHandlers()
+{
+    directiveHandlers["listen"] = &Parser::handleListen;
+    directiveHandlers["server_name"] = &Parser::handleServerName;
+    directiveHandlers["error_page"] = &Parser::handleErrorPage;
+    directiveHandlers["client_max_body_size"] = &Parser::handleMaxBodySize;
 }
 
 void Parser::parseServerBlock()
@@ -112,27 +135,37 @@ void Parser::parseServerBlock()
 			//create vectors of instructions
 			std::vector<std::string> instructions;
 			parseInstruction(instructions);
-			if (checkWord("listen"))
+
+			if (instructions.empty())
+				throw std::runtime_error("instruction");
+
+            if (directiveHandlers.find(instructions[0]) != directiveHandlers.end())
 			{
-				parseString(server.host);
+				//currentHandler = directiveHandlers[instructions[0]];
+                //currentHandler(instructions);
+				(this->*(directiveHandlers[instructions[0]]))(server, instructions);
 			}
-			else if (checkWord("root"))
-			{
-				parseString(server.rootDirectory);
-			}
-			else if (checkWord("server_name"))
-			{
-				parseMultipleString(server.serverNames);
-			}
-			else if (checkWord("error_page"))
-			{}
+			// if (checkWord("listen"))
+			// {
+			// 	parseString(server.host);
+			// }
+			// else if (checkWord("root"))
+			// {
+			// 	parseString(server.rootDirectory);
+			// }
+			// else if (checkWord("server_name"))
+			// {
+			// 	parseMultipleString(server.serverNames);
+			// }
+			// else if (checkWord("error_page"))
+			// {}
 			// else if (checkWord("location")) {
 			// 	server.locations.push_back(parseLocationBlock());
 			// }
-			else
-			{
-				throw std::runtime_error("bad instruction");
-			}
+			// else
+			// {
+			// 	throw std::runtime_error("bad instruction");
+			// }
         }
 		else
 		{
