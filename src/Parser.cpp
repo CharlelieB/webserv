@@ -91,25 +91,48 @@ void Parser::parseMultipleString(std::vector<std::string> &vec)
 void Parser::handleListen(VirtualServer& server, const std::vector<std::string>& args)
 {
 	if (args.size() != 2)
-		throw std::runtime_error("listen wrong arguments");
-	
+		throw std::runtime_error("listen wrong number of arguments");
+	//split the address with : delimiter
 }
 
 void Parser::handleServerName(VirtualServer& server, const std::vector<std::string>& args)
 {
 	if (args.size() < 2 || args.size() > 1000)
-		throw std::runtime_error("server name wrong arguments");
+		throw std::runtime_error("server name wrong number of arguments");
 	for (std::vector<std::string>::const_iterator it = args.begin() + 1; it != args.end(); ++it)
 		server.serverNames.push_back(*it);
 }
 void Parser::handleErrorPage(VirtualServer& server, const std::vector<std::string>& args)
 {
+	if (args.size() != 3)
+		throw std::runtime_error("error_page wrong number of arguments");
+	
+	int errorCode;
+	std::istringstream ss(args[1]);
+	if (ss.fail())
+	{
+        throw std::runtime_error("error_page, error is not an integer");
+    }
+	ss >> errorCode;
 
+	//Not checking url format yet (maybe we should)
+	server.errorPages.insert(std::make_pair(errorCode, args[2]));
 }
 
 void Parser::handleMaxBodySize(VirtualServer& server, const std::vector<std::string>& args)
 {
+	if (args.size() != 2)
+		throw std::runtime_error("max_body_size wrong number of arguments");
 	
+	int size;
+	std::istringstream ss(args[1]);
+	if (ss.fail())
+	{
+        throw std::runtime_error("max_body_size, size is not an integer");
+    }
+	ss >> size;
+
+	server.bodySize = size;
 }
 
 void Parser::setupHandlers()
@@ -190,7 +213,6 @@ void Parser::parseConfig()
         if (check(WORD) && checkWord("server") && checkNext(O_BRACKET))
 		{
 			current += 2;
-			//advance();
 			try
 			{
         		this->parseServerBlock();
@@ -208,66 +230,6 @@ void Parser::parseConfig()
         }
 	}
 }
-
-
-/*
-class Parser {
-public:
-    explicit Parser(const std::vector<Token>& tokens) : tokens(tokens), current(0) {}
-
-    std::unique_ptr<ASTNode> parse() {
-        auto root = std::make_unique<RootNode>();
-        while (!isAtEnd()) {
-            if (check(WORD) && peek().lexeme == "server" && checkNext(OPEN_BRACE)) {
-                root->addChild(parseServerBlock());
-            } else {
-                advance();  // Skip tokens until a recognizable pattern starts
-            }
-        }
-        return root;
-    }
-
-private:
-    const std::vector<Token>& tokens;
-    size_t current;
-
-    bool check(TokenType type) {
-        if (isAtEnd()) return false;
-        return tokens[current].type == type;
-    }
-
-    bool checkNext(TokenType type) {
-        if ((current + 1) >= tokens.size()) return false;
-        return tokens[current + 1].type == type;
-    }
-
-    std::unique_ptr<ASTNode> parseServerBlock() {
-        consume(WORD, "Expect 'server'");
-        consume(OPEN_BRACE, "Expect '{'");
-        auto block = std::make_unique<ServerBlockNode>();
-
-        while (!check(CLOSE_BRACE)) {
-            auto key = consume(WORD, "Expect property key").lexeme;
-            auto value = consume(WORD, "Expect property value").lexeme;
-            block->settings.emplace_back(key, value);
-            consume(SEMICOLON, "Expect ';' after property");
-        }
-
-        consume(CLOSE_BRACE, "Expect '}' at end of server block");
-        return block;
-    }
-
-    Token consume(TokenType type, const std::string& errorMessage) {
-        if (!check(type)) throw std::runtime_error(errorMessage);
-        return tokens[current++];
-    }
-
-    bool isAtEnd() const {
-        return current >= tokens.size();
-    }
-};
-*/
-
 
 //Constructor
 
