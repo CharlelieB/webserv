@@ -4,23 +4,10 @@
 #include <vector>
 #include <string>
 
-enum methods
-{
-	POST,
-	GET,
-	DELETE
-};
-
-struct acceptedMethod
-{
-    enum methods method;
-    bool accepted;
-};
-
 struct Route
 {
 	std::string location;
-	acceptedMethod methods[3];
+	std::map<std::string, bool> methods;
 	std::vector<std::string> redirections;
 	bool directoryListing;
 	std::string defaultFile;
@@ -43,6 +30,7 @@ class Configuration
 	public:
 		void init(const char *filename);
 		void setServers(VirtualServer server);
+		void setRoutes(Route route);
 	private:
     	std::vector<VirtualServer> servers;
 };

@@ -8,8 +8,8 @@ const Token Lexer::tokens[] = {
 		{ "}", C_BRACKET, SEPARATOR },
 		{ ";", SEMICOLON, SEPARATOR },
 		{ " ", SPACE, SEPARATOR },
-		{ "", WORD, WORD },
-		{ "", END, END }
+		{ "", WORD, WORD }
+		//{ "", END, END }
 	};
 
 
@@ -98,7 +98,7 @@ void Lexer::scan(const char *filename)
 		// std::cout << line << std::endl;
 	}
 
-	this->tokenVec.push_back(makeToken("", END, END));
+	//this->tokenVec.push_back(makeToken("", END, END));
 	file.close();
 
 	for (std::vector<Token>::iterator it = this->tokenVec.begin(); it != this->tokenVec.end(); ++it)

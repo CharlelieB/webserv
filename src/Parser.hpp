@@ -29,17 +29,23 @@ class Parser
 		Token consumeWord(const std::string &str, const std::string& errorMessage);
 		const std::string& currentTokenValue() const;
 		
-		void setupHandlers();
+		void setupHandlersInstruction();
+		void setupHandlersLocation();
 
-		void handleListen(VirtualServer& server, const std::vector<std::string>& args);
-		void handleServerName(VirtualServer& server, const std::vector<std::string>& args);
-		void handleErrorPage(VirtualServer& server, const std::vector<std::string>& args);
-		void handleMaxBodySize(VirtualServer& server, const std::vector<std::string>& args);	
+		void parseListen(VirtualServer& server, const std::vector<std::string>& args);
+		void parseServerName(VirtualServer& server, const std::vector<std::string>& args);
+		void parseErrorPage(VirtualServer& server, const std::vector<std::string>& args);
+		void parseMaxBodySize(VirtualServer& server, const std::vector<std::string>& args);
+		
+		void Parser::parseLocation(VirtualServer& server);
+		void Parser::parseLimit(Route& route, const std::vector<std::string>& args);
 	private:
 		size_t current;
 	    const std::vector<Token>& tokens;
 		Configuration& config;
 
 		typedef void (Parser::*HandlerFunction)(VirtualServer& server, const std::vector<std::string>&);
+		typedef void (Parser::*HandlerFunctionLoc)(Route& route, const std::vector<std::string>&);
 		std::map<std::string, HandlerFunction> directiveHandlers;
+		std::map<std::string, HandlerFunctionLoc> directiveHandlersLocation;
 };
