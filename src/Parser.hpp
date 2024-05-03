@@ -37,8 +37,10 @@ class Parser
 		void parseErrorPage(VirtualServer& server, const std::vector<std::string>& args);
 		void parseMaxBodySize(VirtualServer& server, const std::vector<std::string>& args);
 		
-		void Parser::parseLocation(VirtualServer& server);
-		void Parser::parseLimit(Route& route, const std::vector<std::string>& args);
+		void parseLocation(VirtualServer& server);
+		void parseLimit(Route& route, const std::vector<std::string>& args);
+		void parseRedirection(Route& route, const std::vector<std::string>& args);
+		void parseRoot(Route& route, const std::vector<std::string>& args);
 	private:
 		size_t current;
 	    const std::vector<Token>& tokens;

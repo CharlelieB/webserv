@@ -150,10 +150,19 @@ void Parser::parseLimit(Route& route, const std::vector<std::string>& args)
 }
 
 void Parser::parseRedirection(Route& route, const std::vector<std::string>& args)
-{}
+{
+	//for now handle only 301 redirect so conf does not include the redirection type
+	if (args.size() != 2)
+		throw std::runtime_error("redirection wrong number of arguments");
+	route.redirections = args[1];
+}
 
-void Parser::parseRoot()
-{}
+void Parser::parseRoot(Route& route, const std::vector<std::string>& args)
+{
+	if (args.size() != 2)
+		throw std::runtime_error("root wrong number of arguments");
+	route.root = args[1];
+}
 
 void Parser::parseLocation(VirtualServer& server)
 {
@@ -202,9 +211,9 @@ void Parser::setupHandlersInstruction()
 
 void Parser::setupHandlersLocation()
 {
-    directiveHandlers["limit_except"] = &Parser::parseLimit;
-    directiveHandlers["return"] = &Parser::parseRedirection;
-    directiveHandlers["root"] = &Parser::parseRoot;
+    directiveHandlersLocation["limit_except"] = &Parser::parseLimit;
+    directiveHandlersLocation["return"] = &Parser::parseRedirection;
+    directiveHandlersLocation["root"] = &Parser::parseRoot;
 }
 
 void Parser::parseServerBlock()
@@ -233,7 +242,7 @@ void Parser::parseServerBlock()
 			}
 			else if (tokens[current].value == "location")
 			{
-    			handleLocation(server);
+    			parseLocation(server);
 			}
 
 			// else if (checkWord("location")) {

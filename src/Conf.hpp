@@ -8,7 +8,7 @@ struct Route
 {
 	std::string location;
 	std::map<std::string, bool> methods;
-	std::vector<std::string> redirections;
+	std::string redirections;
 	bool directoryListing;
 	std::string defaultFile;
 	std::string root;
