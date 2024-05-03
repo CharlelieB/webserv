@@ -14,11 +14,6 @@ class Parser
 		void parseServerBlock();
 		void parseInstruction(std::vector<std::string>& args);
 
-
-		void parseString(std::string &str);
-		void parseInt(int &n);
-		void parseMultipleString(std::vector<std::string> &str);
-
 		bool check(tokenType type) const;
 		bool checkNext(tokenType type) const;
 		bool checkWord(const std::string &str) const;

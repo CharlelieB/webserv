@@ -56,38 +56,6 @@ void Parser::parseInstruction(std::vector<std::string>& args)
 		throw std::runtime_error("instruction parse error :");
 }
 
-void Parser::parseString(std::string &str)
-{
-	advance();
-	consume(WORD, "Expect an argument for the instruction");
-	str = std::string(currentTokenValue());
-	consume(SEMICOLON, "Expect at the end of instruction");
-}
-
-void Parser::parseInt(int &n)
-{
-	advance();
-	consume(WORD, "Expect an argument for the instruction");
-	std::istringstream ss(currentTokenValue());
-	if (ss.fail())
-	{
-        throw std::runtime_error("Expect an integer");
-    }
-	ss >> n;
-	consume(SEMICOLON, "Expect ; at the end of instruction");
-}
-
-void Parser::parseMultipleString(std::vector<std::string> &vec)
-{
-	advance();
-	while (!isAtEnd() && !check(SEMICOLON))
-	{
-		consume(WORD, "Expect an argument for the instruction");
-		vec.push_back(std::string(currentTokenValue()));
-	}
-	consume(SEMICOLON, "Expect ; at the end of instruction");
-}
-
 void Parser::parseListen(VirtualServer& server, const std::vector<std::string>& args)
 {
 	if (args.size() != 2)
@@ -138,7 +106,7 @@ void Parser::parseMaxBodySize(VirtualServer& server, const std::vector<std::stri
 
 void Parser::parseLimit(Route& route, const std::vector<std::string>& args)
 {
-	if (args.size() != 4)
+	if (2 < args.size() || args.size() > 4)
 		throw std::runtime_error("limit_except wrong number of arguments");
 	
 	for (std::vector<std::string>::const_iterator it = args.begin() + 1; it != args.end(); ++it)
@@ -195,6 +163,9 @@ void Parser::parseLocation(VirtualServer& server)
 	Route route;
 
 	consume(WORD, "Expect a string for the location instruction");
+	if (!check(WORD))
+		throw std::runtime_error("Expert an argument for location");
+	route.location = tokens[current++].value;
 	consume(O_BRACKET, "Expect a bracket for the location instruction");
 
 	while (!isAtEnd())
@@ -242,6 +213,7 @@ void Parser::setupHandlersLocation()
     directiveHandlersLocation["root"] = &Parser::parseRoot;
     directiveHandlersLocation["autoindex"] = &Parser::parseAutoIndex;
     directiveHandlersLocation["index"] = &Parser::parseIndex;
+    directiveHandlersLocation["cgi_path"] = &Parser::parseCgiPath;
 }
 
 void Parser::parseServerBlock()
@@ -272,14 +244,6 @@ void Parser::parseServerBlock()
 			{
     			parseLocation(server);
 			}
-
-			// else if (checkWord("location")) {
-			// 	server.locations.push_back(parseLocationBlock());
-			// }
-			// else
-			// {
-			// 	throw std::runtime_error("bad instruction");
-			// }
         }
 		else
 		{
