@@ -164,6 +164,32 @@ void Parser::parseRoot(Route& route, const std::vector<std::string>& args)
 	route.root = args[1];
 }
 
+void Parser::parseAutoIndex(Route& route, const std::vector<std::string>& args)
+{
+	if (args.size() != 2)
+		throw std::runtime_error("autoindex wrong number of arguments");
+	if (args[1] == "on")
+		route.autoIndex = true;
+	else if (args[1] == "off")
+		route.autoIndex = false;
+	else
+		throw std::runtime_error("autoindex wrong argument");
+}
+
+void Parser::parseIndex(Route& route, const std::vector<std::string>& args)
+{
+	if (args.size() != 2)
+		throw std::runtime_error("index wrong number of arguments");
+	route.index = args[1];
+}
+
+void Parser::parseCgiPath(Route& route, const std::vector<std::string>& args)
+{
+	if (args.size() != 2)
+		throw std::runtime_error("index wrong number of arguments");
+	route.cgiPath = args[1];
+}
+
 void Parser::parseLocation(VirtualServer& server)
 {
 	Route route;
@@ -214,6 +240,8 @@ void Parser::setupHandlersLocation()
     directiveHandlersLocation["limit_except"] = &Parser::parseLimit;
     directiveHandlersLocation["return"] = &Parser::parseRedirection;
     directiveHandlersLocation["root"] = &Parser::parseRoot;
+    directiveHandlersLocation["autoindex"] = &Parser::parseAutoIndex;
+    directiveHandlersLocation["index"] = &Parser::parseIndex;
 }
 
 void Parser::parseServerBlock()

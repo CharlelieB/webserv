@@ -28,7 +28,7 @@ class Parser
 		Token consume(tokenType type, const std::string& errorMessage);
 		Token consumeWord(const std::string &str, const std::string& errorMessage);
 		const std::string& currentTokenValue() const;
-		
+
 		void setupHandlersInstruction();
 		void setupHandlersLocation();
 
@@ -41,6 +41,9 @@ class Parser
 		void parseLimit(Route& route, const std::vector<std::string>& args);
 		void parseRedirection(Route& route, const std::vector<std::string>& args);
 		void parseRoot(Route& route, const std::vector<std::string>& args);
+		void parseAutoIndex(Route& route, const std::vector<std::string>& args);
+		void parseIndex(Route& route, const std::vector<std::string>& args);
+		void parseCgiPath(Route& route, const std::vector<std::string>& args);
 	private:
 		size_t current;
 	    const std::vector<Token>& tokens;

@@ -12,6 +12,9 @@ struct Route
 	bool directoryListing;
 	std::string defaultFile;
 	std::string root;
+	std::string index;
+	std::string cgiPath;
+	bool autoIndex;
 };
 
 struct VirtualServer
