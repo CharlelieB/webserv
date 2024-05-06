@@ -1,0 +1,32 @@
+1) parsing .conf
+parsing du fichier de configuration (comme le server block de nginx) et regles de parsing a definir (assez libre)
+
+2) recherche de info de le serveur 
+gestion de l'acces aux fichiers (envoie et upload)
+gestion de la securite de base (restriction d'acces)
+
+3) envoie des reponse au client
+gestion des differents status (301, 400, 500...)
+
+
+4) recuperration des info in requests
+parsing des requetes client (GET, POST, DELETE)
+
+
+5) com inter procecess
+
+gestion des sockets (structures, socket(), listen(), accept())
+gestion du non bloquant avec poll() ou autre
+send() et recv() avec le client
+
+6) CGI
+
+
+
+#TODO
+gestion des signaux (control C quitter proprement)
+gestion des erreurs de fonction
+gestion de la memoire (pas de crash)
+
+
+stress test
