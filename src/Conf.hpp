@@ -19,6 +19,7 @@ struct Route
 
 struct VirtualServer
 {
+	VirtualServer();
 	std::string host;
 	std::string rootDirectory;
 	std::map<int, std::string> errorPages;
@@ -31,7 +32,6 @@ struct VirtualServer
 class Configuration
 {
 	public:
-		Configuration();
 		void init(const char *filename);
 		void setServers(VirtualServer server);
 		const std::vector<VirtualServer>& getServers() const;

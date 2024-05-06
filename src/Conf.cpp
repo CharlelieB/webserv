@@ -24,5 +24,6 @@ VirtualServer::VirtualServer()
 {
 	host = "";
 	rootDirectory = "";
-	
+	bodySize = 0;
+	port = 0;
 }
