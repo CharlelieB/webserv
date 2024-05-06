@@ -31,8 +31,10 @@ struct VirtualServer
 class Configuration
 {
 	public:
+		Configuration();
 		void init(const char *filename);
 		void setServers(VirtualServer server);
+		const std::vector<VirtualServer>& getServers() const;
 		void setRoutes(Route route);
 	private:
     	std::vector<VirtualServer> servers;

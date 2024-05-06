@@ -16,3 +16,13 @@ bool isValidPort(int port)
 
 //Setter
 void Configuration::setServers(VirtualServer server) { servers.push_back(server); }
+
+const std::vector<VirtualServer>& Configuration::getServers() const { return servers; };
+
+//Constructor
+VirtualServer::VirtualServer()
+{
+	host = "";
+	rootDirectory = "";
+	
+}

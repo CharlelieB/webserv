@@ -18,4 +18,9 @@ int	main(int argc, char **argv)
 
 	Parser parser(lex.getTokens(), config);
 	parser.parseConfig();
+
+	for (std::vector<VirtualServer>::const_iterator it = config.getServers().begin(); it != config.getServers().end(); ++it)
+	{
+		std::cout << it->bodySize << std::endl;
+	}
 }
