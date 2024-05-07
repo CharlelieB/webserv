@@ -1,0 +1,65 @@
+exemple recupere depuis le navigateur chrome :
+
+:authority:
+cdnjs.cloudflare.com
+:method:
+GET
+:path:
+/ajax/libs/jquery/3.7.1/jquery.min.js
+:scheme:
+https
+Accept:
+*/*
+Accept-Encoding:
+gzip, deflate, br, zstd
+Accept-Language:
+fr-FR,fr;q=0.9
+Referer:
+https://mkyong.com/
+Sec-Ch-Ua:
+"Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+Sec-Ch-Ua-Mobile:
+?0
+Sec-Ch-Ua-Platform:
+"Linux"
+Sec-Fetch-Dest:
+script
+Sec-Fetch-Mode:
+no-cors
+Sec-Fetch-Site:
+cross-site
+User-Agent:
+Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+
+/////////////////
+
+
+1. `authority`: C'est l'entité à laquelle la demande est adressée. Dans ce cas, c'est "cdnjs.cloudflare.com", ce qui signifie que la demande est envoyée au serveur "cdnjs.cloudflare.com".
+
+2. `:method`: Cela indique la méthode HTTP utilisée pour la demande. Dans ce cas, c'est "GET", ce qui signifie que le client demande une ressource spécifique et que le serveur doit la retourner.
+
+3. `:path`: C'est le chemin vers la ressource demandée sur le serveur. Ici, la ressource demandée est "/ajax/libs/jquery/3.7.1/jquery.min.js".
+
+4. `:scheme`: C'est le schéma d'URI utilisé dans la requête. Dans ce cas, c'est "https", ce qui signifie que la connexion doit être sécurisée via HTTPS.
+
+5. `Accept`: Il s'agit de l'en-tête HTTP qui indique les types de contenu que le client est prêt à accepter. Dans ce cas, "*/*" signifie que le client accepte n'importe quel type de contenu.
+
+6. `Accept-Encoding`: Cet en-tête indique les méthodes de compression que le client est prêt à accepter de la part du serveur. Les valeurs indiquent ici que le client accepte la compression gzip, deflate, br et zstd.
+
+7. `Accept-Language`: Cet en-tête indique les langues préférées du client pour la réponse. Dans ce cas, il indique que le français est préféré avec "fr-FR,fr;q=0.9".
+
+8. `Referer`: Cet en-tête indique l'URL de la page à partir de laquelle la requête a été initiée. Dans ce cas, il indique que la demande provient de "https://mkyong.com/".
+
+9. `Sec-Ch-Ua`: Il s'agit de l'en-tête de contrôle de l'utilisateur. Il fournit des informations sur le navigateur et sa version. Dans ce cas, il indique que le navigateur est "Google Chrome" version "123".
+
+10. `Sec-Ch-Ua-Mobile`: Cet en-tête indique si le navigateur est en mode mobile. "?0" signifie que cette information n'est pas spécifiée.
+
+11. `Sec-Ch-Ua-Platform`: Cet en-tête indique la plate-forme sur laquelle le navigateur est en cours d'exécution. Dans ce cas, c'est "Linux".
+
+12. `Sec-Fetch-Dest`: Cet en-tête indique la destination prévue pour la réponse. Ici, "script" indique que la réponse attendue est un script.
+
+13. `Sec-Fetch-Mode`: Cet en-tête indique le mode de la requête. "no-cors" signifie que la requête est effectuée en mode "no-cors", ce qui limite certaines fonctionnalités comme l'accès à des en-têtes personnalisés.
+
+14. `Sec-Fetch-Site`: Cet en-tête indique le site de la ressource demandée. "cross-site" signifie que la ressource est demandée à partir d'un autre site.
+
+15. `User-Agent`: Cet en-tête indique des informations sur le client effectuant la demande. Dans ce cas, il indique que le client est un navigateur Chrome sur Linux.
