@@ -4,38 +4,19 @@
 #include <vector>
 #include <string>
 
-struct Route
-{
-	std::string location;
-	std::map<std::string, bool> methods;
-	std::string redirections;
-	bool directoryListing;
-	std::string defaultFile;
-	std::string root;
-	std::string index;
-	std::string cgiPath;
-	bool autoIndex;
-};
-
-struct VirtualServer
-{
-	VirtualServer();
-	std::string host;
-	std::string rootDirectory;
-	std::map<int, std::string> errorPages;
-	size_t bodySize;
-	int port;
-	std::vector<std::string> serverNames;
-	std::vector<Route> routes;
-};
+#include "VirtualServer.hpp"
+#include "Lexer.hpp"
+#include "Parser.hpp"
 
 class Configuration
 {
 	public:
-		void init(const char *filename);
+		Configuration(const char *filename);
 		void setServers(VirtualServer server);
 		const std::vector<VirtualServer>& getServers() const;
-		void setRoutes(Route route);
+		void parseConf();
 	private:
+		Configuration();
     	std::vector<VirtualServer> servers;
+		const char *filename;
 };

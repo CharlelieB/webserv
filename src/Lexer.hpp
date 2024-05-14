@@ -4,6 +4,10 @@
 #include <vector>
 #include "Token.hpp"
 
+// #ifndef LEXER_DEBUG
+// #define LEXER_DEBUG
+// #endif
+
 class Lexer
 {
 	public:
