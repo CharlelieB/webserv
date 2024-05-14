@@ -41,6 +41,8 @@ class Parser
 		void parseAutoIndex(Route& route, const std::vector<std::string>& args);
 		void parseIndex(Route& route, const std::vector<std::string>& args);
 		void parseCgiPath(Route& route, const std::vector<std::string>& args);
+
+		void throwParseError(const std::string& message);
 	private:
 		size_t current;
 	    const std::vector<Token>& tokens;

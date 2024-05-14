@@ -1,7 +1,4 @@
 #include "Conf.hpp"
-#include <fstream>
-#include <iostream>
-#include <sstream>
 #include "Token.hpp"
 
 Configuration::Configuration(const char *filename)

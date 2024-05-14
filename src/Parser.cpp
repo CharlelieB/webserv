@@ -2,6 +2,11 @@
 #include <iostream>
 #include <sstream>
 
+void Parser::throwParseError(const std::string& message)
+{
+	throw std::runtime_error("Parse error: " + message);
+}
+
 bool isValidErrorCode(int code)
 {
 	return 400 <= code && code >= 599;
@@ -49,7 +54,7 @@ Token Parser::consumeWord(const std::string &str, const std::string& errorMessag
 Token Parser::consume(tokenType type, const std::string& errorMessage)
 {
     if (!check(type))
-		throw std::runtime_error(errorMessage);
+		throwParseError(errorMessage);
     return tokens[current++];
 }
 
@@ -63,13 +68,13 @@ void Parser::parseInstruction(std::vector<std::string>& args)
 			break;
 	}
 	if (!check(SEMICOLON))
-		throw std::runtime_error("instruction parse error :");
+		throwParseError("instruction missing ;");
 }
 
 void Parser::parseListen(VirtualServer& server, const std::vector<std::string>& args)
 {
 	if (args.size() != 2)
-		throw std::runtime_error("listen wrong number of arguments");
+		throwParseError(args[0] + ": wrong number of arguments");
 	//split the address with : delimiter
 	server.setHost(args[1]);
 }
@@ -77,20 +82,20 @@ void Parser::parseListen(VirtualServer& server, const std::vector<std::string>& 
 void Parser::parseServerName(VirtualServer& server, const std::vector<std::string>& args)
 {
 	if (args.size() < 2 || args.size() > 1000)
-		throw std::runtime_error("server name wrong number of arguments");
+		throwParseError(args[0] + ": wrong number of arguments");
 	for (std::vector<std::string>::const_iterator it = args.begin() + 1; it != args.end(); ++it)
 		server.setServerNames(*it);
 }
 void Parser::parseErrorPage(VirtualServer& server, const std::vector<std::string>& args)
 {
 	if (args.size() != 3)
-		throw std::runtime_error("error_page wrong number of arguments");
+		throwParseError(args[0] + ": wrong number of arguments");
 	
 	int errorCode;
 	std::istringstream ss(args[1]);
 	if (ss.fail())
 	{
-        throw std::runtime_error("error_page, error is not an integer");
+		throwParseError(args[0] + ": errorCode is not an integer");
     }
 	ss >> errorCode;
 
@@ -101,13 +106,13 @@ void Parser::parseErrorPage(VirtualServer& server, const std::vector<std::string
 void Parser::parseMaxBodySize(VirtualServer& server, const std::vector<std::string>& args)
 {
 	if (args.size() != 2)
-		throw std::runtime_error("max_body_size wrong number of arguments");
+		throwParseError(args[0] + ": wrong number of arguments");
 	
 	int size;
 	std::istringstream ss(args[1]);
 	if (ss.fail())
 	{
-        throw std::runtime_error("max_body_size, size is not an integer");
+		throwParseError(args[0] + ": size is not an integer");
     }
 	ss >> size;
 
@@ -116,13 +121,13 @@ void Parser::parseMaxBodySize(VirtualServer& server, const std::vector<std::stri
 
 void Parser::parseLimit(Route& route, const std::vector<std::string>& args)
 {
-	if (2 < args.size() || args.size() > 4)
-		throw std::runtime_error("limit_except wrong number of arguments");
+	if (args.size() < 2 || args.size() > 4)
+		throwParseError(args[0] + ": wrong number of arguments");
 	
 	for (std::vector<std::string>::const_iterator it = args.begin() + 1; it != args.end(); ++it)
 	{
 		if (*it != "GET" && *it != "POST" && *it != "DELETE")
-			throw std::runtime_error("limit_except wrong method");
+			throwParseError(args[0] + ": wrong method");
 		route.setMethods(*it, true);
 	}
 }
@@ -131,40 +136,40 @@ void Parser::parseRedirection(Route& route, const std::vector<std::string>& args
 {
 	//for now handle only 301 redirect so conf does not include the redirection type
 	if (args.size() != 2)
-		throw std::runtime_error("redirection wrong number of arguments");
+		throwParseError(args[0] + ": wrong number of arguments");
 	route.setRedirection(args[1]);
 }
 
 void Parser::parseRoot(Route& route, const std::vector<std::string>& args)
 {
 	if (args.size() != 2)
-		throw std::runtime_error("root wrong number of arguments");
+		throwParseError(args[0] + ": wrong number of arguments");
 	route.setRoot(args[1]);
 }
 
 void Parser::parseAutoIndex(Route& route, const std::vector<std::string>& args)
 {
 	if (args.size() != 2)
-		throw std::runtime_error("autoindex wrong number of arguments");
+		throwParseError(args[0] + ": wrong number of arguments");
 	if (args[1] == "on")
 		route.setAutoIndex(true);
 	else if (args[1] == "off")
 		route.setAutoIndex(false);
 	else
-		throw std::runtime_error("autoindex wrong argument");
+		throwParseError(args[0] + ": wrong arguments");
 }
 
 void Parser::parseIndex(Route& route, const std::vector<std::string>& args)
 {
 	if (args.size() != 2)
-		throw std::runtime_error("index wrong number of arguments");
+		throwParseError(args[0] + ": wrong number of arguments");
 	route.setIndex(args[1]);
 }
 
 void Parser::parseCgiPath(Route& route, const std::vector<std::string>& args)
 {
 	if (args.size() != 2)
-		throw std::runtime_error("index wrong number of arguments");
+		throwParseError(args[0] + ": wrong number of arguments");
 	route.setCgiPath(args[1]);
 }
 
@@ -172,11 +177,13 @@ void Parser::parseLocation(VirtualServer& server)
 {
 	Route route;
 
-	consume(WORD, "Expect a string for the location instruction");
+	consume(WORD, "expect a string for the location instruction");
 	if (!check(WORD))
-		throw std::runtime_error("Expert an argument for location");
+	{
+		throwParseError("expect an argument for location");
+	}
 	route.setLocation(tokens[current++].value);
-	consume(O_BRACKET, "Expect a bracket for the location instruction");
+	consume(O_BRACKET, "expect a bracket for the location instruction");
 
 	while (!isAtEnd())
 	{
@@ -194,15 +201,14 @@ void Parser::parseLocation(VirtualServer& server)
 
 				if (instructions.empty())
 				{
-					throw std::runtime_error("instruction");
+					throwParseError("incomplete instruction in location block");
 				}
 				(this->*(directiveHandlersLocation[instructions[0]]))(route, instructions);
 			}
 	    }
 		else
 		{
-            std::cerr << "parse error near " << tokens[current].value << std::endl;
-			return ;
+			throwParseError("location block");
         }
 		advance();
 	}
@@ -246,7 +252,7 @@ void Parser::parseServerBlock()
 
 				if (instructions.empty())
 				{
-					throw std::runtime_error("instruction");
+					throwParseError("incomplete instruction in server block");
 				}
 				(this->*(directiveHandlers[instructions[0]]))(server, instructions);
 			}
@@ -257,11 +263,11 @@ void Parser::parseServerBlock()
         }
 		else
 		{
-			throw std::runtime_error("server block");
+			throwParseError("server block");
 		}
 		advance();
     }
-	throw std::runtime_error("server block");
+	throwParseError("server block");
 }
 
 void Parser::advance()
@@ -280,28 +286,16 @@ void Parser::parseConfig()
         if (check(WORD) && checkWord("server") && checkNext(O_BRACKET))
 		{
 			current += 2;
-			try
-			{
-        		this->parseServerBlock();
-			}
-			catch(std::runtime_error& e)
-			{
-				std::cout << e.what() << " parse error near " << tokens[current].value << std::endl;
-				return ;
-			}
+        	this->parseServerBlock();
 	    }
 		else
 		{
-            std::cerr << "parse error near " << tokens[current].value << std::endl;
-			return ;
+			throwParseError("unexpected token: " + tokens[current].value);
         }
 		advance();
 	}
 }
 
-/*
-
-*/
 //Constructor
 
 Parser::Parser(const std::vector<Token>& tokens, Configuration& config): tokens(tokens), config(config) {}
