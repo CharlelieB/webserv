@@ -5,6 +5,8 @@
 #include "Token.hpp"
 #include "Conf.hpp"
 
+class Configuration;
+
 class Parser
 {
 	public:

@@ -50,15 +50,12 @@ void Lexer::tokenize(const std::string& str)
 
 	std::string::const_iterator it = str.begin();
 	std::string::const_iterator start = str.begin();
-	//server{listen 80;}
 
 	while (it != str.end())
 	{
-		//std::cout << *it << std::endl;
 		token = findToken(*it);
 		if (token.genericType == SEPARATOR)
 		{
-			//std::cout << "test " << advance;
 			if (it != start)
 			{
 				tokenVec.push_back(makeToken(std::string(start, it), WORD, WORD));
@@ -88,23 +85,22 @@ void Lexer::scan(const char *filename)
 
 	if (!file.is_open())
 	{
-   		std::cerr << "Failed to open file.";
-    	return ; //maybe throw ?
+    	throw(std::runtime_error("Failed to open conf file."));
 	}
 
 	while (getline(file, line))
 	{
 		this->tokenize(line);
-		// std::cout << line << std::endl;
 	}
 
-	//this->tokenVec.push_back(makeToken("", END, END));
 	file.close();
 
+	#ifdef LEXER_DEBUG
 	for (std::vector<Token>::iterator it = this->tokenVec.begin(); it != this->tokenVec.end(); ++it)
 	{
 		std::cout << it->type << " " << it->value << std::endl;
 	}
+	#endif
 }
 
 const std::vector<Token>& Lexer::getTokens() const { return tokenVec; }

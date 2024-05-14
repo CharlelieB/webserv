@@ -1,12 +1,8 @@
 #include <iostream>
 #include "Conf.hpp"
-#include "Lexer.hpp"
-#include "Parser.hpp"
 
 int	main(int argc, char **argv)
 {
-	Lexer lex;
-	Configuration config;
 
 	if (argc != 2)
 	{
@@ -14,13 +10,18 @@ int	main(int argc, char **argv)
 		return 1;
 	}
 
-	lex.scan(argv[1]);
+	Configuration config(argv[1]);
 
-	Parser parser(lex.getTokens(), config);
-	parser.parseConfig();
-
-	for (std::vector<VirtualServer>::const_iterator it = config.getServers().begin(); it != config.getServers().end(); ++it)
+	try
 	{
-		std::cout << it->bodySize << std::endl;
+		config.parseConf();
 	}
+	catch(std::exception &e)
+	{
+		std::cout << e.what() << std::endl;
+	}
+	// for (std::vector<VirtualServer>::const_iterator it = config.getServers().begin(); it != config.getServers().end(); ++it)
+	// {
+	// 	std::cout << it->bodySize << std::endl;
+	// }
 }

@@ -4,26 +4,21 @@
 #include <sstream>
 #include "Token.hpp"
 
-bool isValidErrorCode(int code)
+Configuration::Configuration(const char *filename)
 {
-	return 400 <= code && code >= 599;
+	this->filename = filename;
 }
 
-bool isValidPort(int port)
+void Configuration::parseConf()
 {
-	return 1 <= port && port >= 65535;
+	Lexer lex;
+	lex.scan(this->filename);
+
+	Parser parser(lex.getTokens(), *this);
+	parser.parseConfig();
 }
 
 //Setter
 void Configuration::setServers(VirtualServer server) { servers.push_back(server); }
 
 const std::vector<VirtualServer>& Configuration::getServers() const { return servers; };
-
-//Constructor
-VirtualServer::VirtualServer()
-{
-	host = "";
-	rootDirectory = "";
-	bodySize = 0;
-	port = 0;
-}
