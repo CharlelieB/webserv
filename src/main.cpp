@@ -21,8 +21,9 @@ int	main(int argc, char **argv)
 		std::cout << e.what() << std::endl;
 		return 1;
 	}
-	// for (std::vector<VirtualServer>::const_iterator it = config.getServers().begin(); it != config.getServers().end(); ++it)
-	// {
-	// 	std::cout << it->bodySize << std::endl;
-	// }
+	for (std::vector<VirtualServer>::const_iterator it = config.getServers().begin(); it != config.getServers().end(); ++it)
+	{
+		std::cout << it->getPort() << std::endl;
+		std::cout << it->getHost() << std::endl;
+	}
 }

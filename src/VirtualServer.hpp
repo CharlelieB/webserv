@@ -25,4 +25,7 @@ class VirtualServer
 		void setPort(int port);
 		void setServerNames(const std::string& serverName);
 		void setRoutes(const Route& route);
+
+		int getPort() const;
+		std::string getHost() const;
 };

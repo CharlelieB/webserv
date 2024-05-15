@@ -35,11 +35,18 @@ void VirtualServer::setRoutes(const Route& route)
 	this->routes.push_back(route);
 }
 
-//Constructor
-VirtualServer::VirtualServer()
+//Getters
+
+int VirtualServer::getPort() const
 {
-	host = "";
-	rootDirectory = "";
-	bodySize = 0;
-	port = 80;
+	return this->port;
 }
+
+std::string VirtualServer::getHost() const
+{
+	return this->host;
+}
+
+
+//Constructor
+VirtualServer::VirtualServer(): bodySize(0), port(80) {}

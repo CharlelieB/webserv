@@ -2,20 +2,28 @@
 #include <iostream>
 #include <sstream>
 
+int Parser::parseNumber(const std::string& str)
+{
+	int nb;
+
+	std::istringstream ss(str);
+	if (ss.fail())
+	{
+		throw std::runtime_error("not an integer");
+    }
+	ss >> nb;
+	return nb;
+}
+
 void Parser::throwParseError(const std::string& message)
 {
 	throw std::runtime_error("Parse error: " + message);
 }
 
-bool isValidErrorCode(int code)
-{
-	return 400 <= code && code >= 599;
-}
-
-bool isValidPort(int port)
-{
-	return 1 <= port && port >= 65535;
-}
+// bool isValidPort(int port)
+// {
+// 	return 1 <= port && port >= 65535;
+// }
 
 bool Parser::checkNext(tokenType type) const
 {
@@ -75,9 +83,25 @@ void Parser::parseListen(VirtualServer& server, const std::vector<std::string>& 
 {
 	if (args.size() != 2)
 		throwParseError(args[0] + ": wrong number of arguments");
-	//split the address with : delimiter
+	
+	try
+	{
+		int port = parseNumber(args[1]);
+		server.setPort(port);
+	}
+	catch(std::exception &e)
+	{
+		throwParseError(args[0] + ": port is not an integer");
+	}
+}
+
+void Parser::parseHost(VirtualServer& server, const std::vector<std::string>& args)
+{
+	if (args.size() != 2)
+		throwParseError(args[0] + ": wrong number of arguments");
 	server.setHost(args[1]);
 }
+
 
 void Parser::parseServerName(VirtualServer& server, const std::vector<std::string>& args)
 {
@@ -91,16 +115,16 @@ void Parser::parseErrorPage(VirtualServer& server, const std::vector<std::string
 	if (args.size() != 3)
 		throwParseError(args[0] + ": wrong number of arguments");
 	
-	int errorCode;
-	std::istringstream ss(args[1]);
-	if (ss.fail())
+	try
+	{
+		int errorCode = parseNumber(args[1]);
+		//Not checking url format yet (maybe we should)
+		server.setErrorPage(errorCode, args[2]);
+	}
+	catch(std::exception &e)
 	{
 		throwParseError(args[0] + ": errorCode is not an integer");
-    }
-	ss >> errorCode;
-
-	//Not checking url format yet (maybe we should)
-	server.setErrorPage(errorCode, args[2]);
+	}
 }
 
 void Parser::parseMaxBodySize(VirtualServer& server, const std::vector<std::string>& args)
@@ -217,6 +241,7 @@ void Parser::parseLocation(VirtualServer& server)
 void Parser::setupHandlersInstruction()
 {
     directiveHandlers["listen"] = &Parser::parseListen;
+    directiveHandlers["host"] = &Parser::parseHost;
     directiveHandlers["server_name"] = &Parser::parseServerName;
     directiveHandlers["error_page"] = &Parser::parseErrorPage;
     directiveHandlers["client_max_body_size"] = &Parser::parseMaxBodySize;

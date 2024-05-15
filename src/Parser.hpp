@@ -30,6 +30,7 @@ class Parser
 		void setupHandlersLocation();
 
 		void parseListen(VirtualServer& server, const std::vector<std::string>& args);
+		void parseHost(VirtualServer& server, const std::vector<std::string>& args);
 		void parseServerName(VirtualServer& server, const std::vector<std::string>& args);
 		void parseErrorPage(VirtualServer& server, const std::vector<std::string>& args);
 		void parseMaxBodySize(VirtualServer& server, const std::vector<std::string>& args);
@@ -41,6 +42,8 @@ class Parser
 		void parseAutoIndex(Route& route, const std::vector<std::string>& args);
 		void parseIndex(Route& route, const std::vector<std::string>& args);
 		void parseCgiPath(Route& route, const std::vector<std::string>& args);
+
+		int parseNumber(const std::string& str);
 
 		void throwParseError(const std::string& message);
 	private:

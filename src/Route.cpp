@@ -12,12 +12,7 @@ void Route::setMethods(const std::string& methods, bool enabled)
 
 void Route::setRedirection(const std::string& url)
 {
-	this->redirections = url;
-}
-
-void Route::setListing(bool enabled)
-{
-	this->directoryListing = enabled;
+	this->redirection = url;
 }
 
 void Route::setDefaultFile(const std::string& file)
@@ -44,3 +39,6 @@ void Route::setAutoIndex(bool enabled)
 {
 	this->autoIndex = enabled;
 }
+
+//Constructor
+Route::Route(): autoIndex(false) {}
