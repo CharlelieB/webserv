@@ -47,12 +47,12 @@ class Parser
 
 		void throwParseError(const std::string& message);
 	private:
-		size_t current;
-	    const std::vector<Token>& tokens;
-		Configuration& config;
+		size_t _current;
+	    const std::vector<Token>& _tokens;
+		Configuration& _config;
 
 		typedef void (Parser::*HandlerFunction)(VirtualServer& server, const std::vector<std::string>&);
 		typedef void (Parser::*HandlerFunctionLoc)(Route& route, const std::vector<std::string>&);
-		std::map<std::string, HandlerFunction> directiveHandlers;
-		std::map<std::string, HandlerFunctionLoc> directiveHandlersLocation;
+		std::map<std::string, HandlerFunction> _directiveHandlers;
+		std::map<std::string, HandlerFunctionLoc> _directiveHandlersLocation;
 };

@@ -9,13 +9,13 @@
 class VirtualServer
 {
 	private:
-		std::string host;
-		std::string rootDirectory;
-		std::map<int, std::string> errorPages;
-		size_t bodySize;
-		int port;
-		std::vector<std::string> serverNames;
-		std::vector<Route> routes;
+		std::string _host;
+		std::string _rootDirectory;
+		std::map<int, std::string> _errorPages;
+		size_t _bodySize;
+		int _port;
+		std::vector<std::string> _serverNames;
+		std::vector<Route> _routes;
 	public:
 		VirtualServer();
 		void setHost(const std::string& host);

@@ -17,6 +17,6 @@ class Configuration
 		void parseConf();
 	private:
 		Configuration();
-    	std::vector<VirtualServer> servers;
-		const char *filename;
+    	std::vector<VirtualServer> _servers;
+		const char* _filename;
 };

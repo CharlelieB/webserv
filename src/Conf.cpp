@@ -3,19 +3,19 @@
 
 Configuration::Configuration(const char *filename)
 {
-	this->filename = filename;
+	this->_filename = filename;
 }
 
 void Configuration::parseConf()
 {
 	Lexer lex;
-	lex.scan(this->filename);
+	lex.scan(this->_filename);
 
 	Parser parser(lex.getTokens(), *this);
 	parser.parseConfig();
 }
 
 //Setter
-void Configuration::setServers(VirtualServer server) { servers.push_back(server); }
+void Configuration::setServers(VirtualServer server) { _servers.push_back(server); }
 
-const std::vector<VirtualServer>& Configuration::getServers() const { return servers; };
+const std::vector<VirtualServer>& Configuration::getServers() const { return _servers; };

@@ -22,5 +22,5 @@ class Lexer
 
 		const std::vector<Token>& getTokens() const;
 	private:
-		std::vector<Token> tokenVec;
+		std::vector<Token> _tokenVec;
 };

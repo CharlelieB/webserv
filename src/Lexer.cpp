@@ -58,11 +58,11 @@ void Lexer::tokenize(const std::string& str)
 		{
 			if (it != start)
 			{
-				tokenVec.push_back(makeToken(std::string(start, it), WORD, WORD));
+				_tokenVec.push_back(makeToken(std::string(start, it), WORD, WORD));
 			}
 			if (token.type != SPACE)
             {
-				tokenVec.push_back(token);
+				_tokenVec.push_back(token);
             }
 			++it;
 			start = it;
@@ -72,7 +72,7 @@ void Lexer::tokenize(const std::string& str)
 	}
 	if (it != start)
 	{
-		tokenVec.push_back(makeToken(std::string(start, it), WORD, WORD));
+		_tokenVec.push_back(makeToken(std::string(start, it), WORD, WORD));
 	}
 }
 
@@ -96,11 +96,11 @@ void Lexer::scan(const char *filename)
 	file.close();
 
 	#ifdef LEXER_DEBUG
-	for (std::vector<Token>::iterator it = this->tokenVec.begin(); it != this->tokenVec.end(); ++it)
+	for (std::vector<Token>::iterator it = this->_tokenVec.begin(); it != this->_tokenVec.end(); ++it)
 	{
 		std::cout << it->type << " " << it->value << std::endl;
 	}
 	#endif
 }
 
-const std::vector<Token>& Lexer::getTokens() const { return tokenVec; }
+const std::vector<Token>& Lexer::getTokens() const { return _tokenVec; }

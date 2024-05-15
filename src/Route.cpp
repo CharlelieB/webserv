@@ -2,43 +2,43 @@
 
 void Route::setLocation(const std::string& path)
 {
-	this->location = path;
+	this->_location = path;
 }
 
 void Route::setMethods(const std::string& methods, bool enabled)
 {
-	this->methods[methods] = enabled;
+	this->_methods[methods] = enabled;
 }
 
 void Route::setRedirection(const std::string& url)
 {
-	this->redirection = url;
+	this->_redirection = url;
 }
 
 void Route::setDefaultFile(const std::string& file)
 {
-	this->defaultFile = file;
+	this->_defaultFile = file;
 }
 
 void Route::setRoot(const std::string& root)
 {
-	this->root = root;
+	this->_root = root;
 }
 
 void Route::setIndex(const std::string& index)
 {
-	this->index = index;
+	this->_index = index;
 }
 
 void Route::setCgiPath(const std::string& path)
 {
-	this->cgiPath = path;
+	this->_cgiPath = path;
 }
 
 void Route::setAutoIndex(bool enabled)
 {
-	this->autoIndex = enabled;
+	this->_autoIndex = enabled;
 }
 
 //Constructor
-Route::Route(): autoIndex(false) {}
+Route::Route(): _autoIndex(false) {}

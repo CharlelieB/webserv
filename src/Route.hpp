@@ -6,14 +6,14 @@
 class Route
 {
 	private:
-		std::string location;
-		std::map<std::string, bool> methods;
-		std::string redirection;
-		std::string defaultFile;
-		std::string root;
-		std::string index;
-		std::string cgiPath;
-		bool autoIndex;
+		std::string _location;
+		std::map<std::string, bool> _methods;
+		std::string _redirection;
+		std::string _defaultFile;
+		std::string _root;
+		std::string _index;
+		std::string _cgiPath;
+		bool _autoIndex;
 	public:
 		Route();
 		void setLocation(const std::string& path);

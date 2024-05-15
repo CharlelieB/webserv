@@ -27,43 +27,43 @@ void Parser::throwParseError(const std::string& message)
 
 bool Parser::checkNext(tokenType type) const
 {
-	if ((current + 1) >= tokens.size()) return false;
+	if ((_current + 1) >= _tokens.size()) return false;
 
-	return tokens[current + 1].type == type;
+	return _tokens[_current + 1].type == type;
 }
 
 bool Parser::check(tokenType type) const
 {
     if (isAtEnd()) return false;
-    return tokens[current].type == type;
+    return _tokens[_current].type == type;
 }
 
 const std::string& Parser::currentTokenValue() const
 {
-	return tokens[current].value;
+	return _tokens[_current].value;
 }
 	
 bool Parser::isAtEnd() const {
-	return current >= tokens.size();
+	return _current >= _tokens.size();
 }
 
 bool Parser::checkWord(const std::string &str) const
 {
-	return tokens[current].value == str;
+	return _tokens[_current].value == str;
 }
 
 Token Parser::consumeWord(const std::string &str, const std::string& errorMessage)
 {
-	if (tokens[current].value != str)
+	if (_tokens[_current].value != str)
 		throw std::runtime_error(errorMessage);
-	return tokens[current++];
+	return _tokens[_current++];
 }
 
 Token Parser::consume(tokenType type, const std::string& errorMessage)
 {
     if (!check(type))
 		throwParseError(errorMessage);
-    return tokens[current++];
+    return _tokens[_current++];
 }
 
 void Parser::parseInstruction(std::vector<std::string>& args)
@@ -71,7 +71,7 @@ void Parser::parseInstruction(std::vector<std::string>& args)
 	while (!isAtEnd())
 	{
 		if (check(WORD))
-			args.push_back(tokens[current++].value);
+			args.push_back(_tokens[_current++].value);
 		else
 			break;
 	}
@@ -206,7 +206,7 @@ void Parser::parseLocation(VirtualServer& server)
 	{
 		throwParseError("expect an argument for location");
 	}
-	route.setLocation(tokens[current++].value);
+	route.setLocation(_tokens[_current++].value);
 	consume(O_BRACKET, "expect a bracket for the location instruction");
 
 	while (!isAtEnd())
@@ -217,7 +217,7 @@ void Parser::parseLocation(VirtualServer& server)
 		}
 		if (check(WORD))
 		{
- 			if (directiveHandlersLocation.find(tokens[current].value) != directiveHandlersLocation.end())
+ 			if (_directiveHandlersLocation.find(_tokens[_current].value) != _directiveHandlersLocation.end())
 			{
 				//create vectors of instructions
 				std::vector<std::string> instructions;
@@ -227,7 +227,7 @@ void Parser::parseLocation(VirtualServer& server)
 				{
 					throwParseError("incomplete instruction in location block");
 				}
-				(this->*(directiveHandlersLocation[instructions[0]]))(route, instructions);
+				(this->*(_directiveHandlersLocation[instructions[0]]))(route, instructions);
 			}
 	    }
 		else
@@ -240,21 +240,21 @@ void Parser::parseLocation(VirtualServer& server)
 
 void Parser::setupHandlersInstruction()
 {
-    directiveHandlers["listen"] = &Parser::parseListen;
-    directiveHandlers["host"] = &Parser::parseHost;
-    directiveHandlers["server_name"] = &Parser::parseServerName;
-    directiveHandlers["error_page"] = &Parser::parseErrorPage;
-    directiveHandlers["client_max_body_size"] = &Parser::parseMaxBodySize;
+    _directiveHandlers["listen"] = &Parser::parseListen;
+    _directiveHandlers["host"] = &Parser::parseHost;
+    _directiveHandlers["server_name"] = &Parser::parseServerName;
+    _directiveHandlers["error_page"] = &Parser::parseErrorPage;
+    _directiveHandlers["client_max_body_size"] = &Parser::parseMaxBodySize;
 }
 
 void Parser::setupHandlersLocation()
 {
-    directiveHandlersLocation["limit_except"] = &Parser::parseLimit;
-    directiveHandlersLocation["return"] = &Parser::parseRedirection;
-    directiveHandlersLocation["root"] = &Parser::parseRoot;
-    directiveHandlersLocation["autoindex"] = &Parser::parseAutoIndex;
-    directiveHandlersLocation["index"] = &Parser::parseIndex;
-    directiveHandlersLocation["cgi_path"] = &Parser::parseCgiPath;
+    _directiveHandlersLocation["limit_except"] = &Parser::parseLimit;
+    _directiveHandlersLocation["return"] = &Parser::parseRedirection;
+    _directiveHandlersLocation["root"] = &Parser::parseRoot;
+    _directiveHandlersLocation["autoindex"] = &Parser::parseAutoIndex;
+    _directiveHandlersLocation["index"] = &Parser::parseIndex;
+    _directiveHandlersLocation["cgi_path"] = &Parser::parseCgiPath;
 }
 
 void Parser::parseServerBlock()
@@ -265,11 +265,11 @@ void Parser::parseServerBlock()
 	{
 		if (check(C_BRACKET))
 		{
-			return this->config.setServers(server);
+			return this->_config.setServers(server);
 		}
 		if (check(WORD))
 		{
-            if (directiveHandlers.find(tokens[current].value) != directiveHandlers.end())
+            if (_directiveHandlers.find(_tokens[_current].value) != _directiveHandlers.end())
 			{
 				//create vectors of instructions
 				std::vector<std::string> instructions;
@@ -279,9 +279,9 @@ void Parser::parseServerBlock()
 				{
 					throwParseError("incomplete instruction in server block");
 				}
-				(this->*(directiveHandlers[instructions[0]]))(server, instructions);
+				(this->*(_directiveHandlers[instructions[0]]))(server, instructions);
 			}
-			else if (tokens[current].value == "location")
+			else if (_tokens[_current].value == "location")
 			{
     			parseLocation(server);
 			}
@@ -297,12 +297,12 @@ void Parser::parseServerBlock()
 
 void Parser::advance()
 {
-	++current;
+	++_current;
 }
 
 void Parser::parseConfig()
 {
-	this->current = 0;
+	this->_current = 0;
 	setupHandlersInstruction();
 	setupHandlersLocation();
 
@@ -310,12 +310,12 @@ void Parser::parseConfig()
 	{
         if (check(WORD) && checkWord("server") && checkNext(O_BRACKET))
 		{
-			current += 2;
+			_current += 2;
         	this->parseServerBlock();
 	    }
 		else
 		{
-			throwParseError("unexpected token: " + tokens[current].value);
+			throwParseError("unexpected token: " + _tokens[_current].value);
         }
 		advance();
 	}
@@ -323,4 +323,4 @@ void Parser::parseConfig()
 
 //Constructor
 
-Parser::Parser(const std::vector<Token>& tokens, Configuration& config): tokens(tokens), config(config) {}
+Parser::Parser(const std::vector<Token>& tokens, Configuration& config): _tokens(tokens), _config(config) {}
