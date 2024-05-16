@@ -28,4 +28,15 @@ class VirtualServer
 
 		int getPort() const;
 		std::string getHost() const;
+
+		// bool operator<(const VirtualServer& other) const
+		// {
+		// 	if (_host != other._host)
+		// 		return _host < other._host;
+        // 	return _port < other._port;
+		// }
+    	// bool operator==(const VirtualServer& other) const
+		// {
+        // 	return _host == other._host && _port == other._port;
+    	// }
 };
