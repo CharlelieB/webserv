@@ -49,4 +49,4 @@ std::string VirtualServer::getHost() const
 
 
 //Constructor
-VirtualServer::VirtualServer(): _bodySize(0), _port(80) {}
+VirtualServer::VirtualServer(): _host("0.0.0.0"), _bodySize(0), _port(80) {}
