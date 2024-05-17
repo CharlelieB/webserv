@@ -71,7 +71,7 @@ void	ServerManager::run()
     _addrlen = sizeof(_address);
     char buffer[1024];
 
-    std::map<int, std::string> message_queues;
+    //std::map<int, std::string> message_queues;
 
 	setAddressesToListen();
 
@@ -149,28 +149,29 @@ void	ServerManager::run()
                     std::cout << "Host disconnected, ip " << inet_ntoa(_address.sin_addr) << ", port " << ntohs(_address.sin_port) << std::endl;
                     close(_sd);
                     client = _clients.erase(client);
-                    message_queues.erase(_sd);
+                    //message_queues.erase(_sd);
                 }
 				else
 				{
                     buffer[valread] = '\0';
                     std::string message(buffer);
                     std::cout << "Received message: " << message << std::endl;
-                    message_queues[_sd] += message;
+                    // message_queues[_sd] += message;
                     ++client;
                 }
             }
 			else if (FD_ISSET(_sd, &_writefds))
 			{
-                if (!message_queues[_sd].empty())
-				{
-                    const std::string& msg = message_queues[_sd];
-                    int sent_bytes = send(_sd, msg.c_str(), msg.size(), 0);
-                    if (sent_bytes > 0)
-					{
-                        message_queues[_sd].erase(0, sent_bytes);
-                    }
-                }
+				//SEND REQUEST TO CLIENT HERE
+                // if (!message_queues[_sd].empty())
+				// {
+                //     const std::string& msg = message_queues[_sd];
+                //     int sent_bytes = send(_sd, msg.c_str(), msg.size(), 0);
+                //     if (sent_bytes > 0)
+				// 	{
+                //         message_queues[_sd].erase(0, sent_bytes);
+                //     }
+                // }
                 ++client;
             }
 			else if (FD_ISSET(_sd, &_exceptfds))
@@ -178,7 +179,7 @@ void	ServerManager::run()
                 std::cerr << "Exception on socket " << _sd << std::endl;
                 close(_sd);
                 client = _clients.erase(client);
-                message_queues.erase(_sd);
+                // message_queues.erase(_sd);
             }
 			else
 			{
