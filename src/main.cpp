@@ -17,7 +17,7 @@ int	main(int argc, char **argv)
 	{
 		config.parseConf();
 		ServerManager server(config.getServers());
-		server.setAddressesToListen();
+		//server.setAddressesToListen();
 
 	}
 	catch(std::exception &e)

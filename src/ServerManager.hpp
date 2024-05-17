@@ -12,9 +12,9 @@
 #include <sys/select.h>
 #include <netinet/in.h>
 #include <map>
-#include <algorithm>
 
 #include "VirtualServer.hpp"
+#include "Client.hpp"
 
 class SearchPairFunctor
 {
@@ -33,12 +33,20 @@ class ServerManager
 {
 	private:
 		std::vector<int> _serverSockets;
-    	std::vector<int> _clientSockets;
+    	// std::vector<int> _clientSockets;
+		std::vector<Client> _clients;
 		int _maxFd;
+		int _sd;
 		std::vector<std::pair<std::string, int> > _addresses;
 		std::vector<VirtualServer> _servers;
+		fd_set _readfds, _writefds, _exceptfds;
+		struct sockaddr_in _address;
+		int _addrlen;
 	public:
 		ServerManager(std::vector<VirtualServer> servers);
 		void	run();
+		void	addServerSocketsToSet();
 		void	setAddressesToListen();
+		void	addClientSocketsToSet();
+		void	handleNewConnections();
 };

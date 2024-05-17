@@ -1,5 +1,8 @@
 #include "ServerManager.hpp"
 #include <utility>
+#include <cstdio>
+#include <algorithm>
+#include <cerrno>
 
 void	ServerManager::setAddressesToListen()
 {
@@ -16,172 +19,178 @@ void	ServerManager::setAddressesToListen()
 	
 }
 
-// void	ServerManager::run()
-// {
-// 	int sd;
-//     struct sockaddr_in address;
-//     int addrlen = sizeof(address);
-//     char buffer[1024];
+void	ServerManager::handleNewConnections()
+{
+		for (std::vector<int>::const_iterator serverSocket = _serverSockets.begin(); serverSocket != _serverSockets.end(); ++serverSocket)
+		{
+            if (FD_ISSET(*serverSocket, &_readfds))
+			{
+                int newSocket = accept(*serverSocket, (struct sockaddr *)&_address, (socklen_t*)&_addrlen);
+                if (newSocket < 0)
+				{
+                    perror("accept");
+                    exit(EXIT_FAILURE);
+                }
+                std::cout << "New connection, socket fd is " << newSocket << ", ip is : " << inet_ntoa(_address.sin_addr) << ", port: " << ntohs(_address.sin_port) << std::endl;
+				_clients.push_back(Client(newSocket));
+				//_clientSockets.push_back(newSocket);
+                // message_queues[newSocket] = "";
+            }
+        }
+}
 
-//     fd_set readfds, writefds, exceptfds;
-//     std::map<int, std::string> message_queues;
+void	ServerManager::addClientSocketsToSet()
+{
+	for (std::vector<Client>::iterator client = _clients.begin(); client != _clients.end(); ++client)
+	{
+        _sd = client->getSd();
+        FD_SET(_sd, &_readfds);
+        FD_SET(_sd, &_writefds);
+        FD_SET(_sd, &_exceptfds);
+        if (_sd > _maxFd)
+		{
+            _maxFd = _sd;
+        }
+    }
+}
 
-//     // Define IP addresses and ports to listen on
-//     std::vector<std::pair<std::string, int>> addresses = {
-//         {"0.0.0.0", 12345},
-//         {"127.0.0.1", 12346}
-//     };
+void	ServerManager::addServerSocketsToSet()
+{
+	for (std::vector<int>::const_iterator serverSocket = _serverSockets.begin(); serverSocket != _serverSockets.end(); ++serverSocket)
+	{
+	    FD_SET(*serverSocket, &_readfds);
+	    if (*serverSocket > _maxFd)
+		{
+	        _maxFd = *serverSocket;
+	    }
+	}
+}
 
-//     // Create and bind server sockets for each address
-//     for (std::vector<std::pair<std::string, int>>::const_iterator addr = addresses.begin(); addr != addresses.end(); ++addr)
-// 	{
-//         int server_socket;
-//         if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-// 		{
-//             perror("socket failed");
-//             exit(EXIT_FAILURE);
-//         }
+void	ServerManager::run()
+{
+    _addrlen = sizeof(_address);
+    char buffer[1024];
 
-//         int opt = 1;
-//         if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
-// 		{
-//             perror("setsockopt");
-//             close(server_socket);
-//             exit(EXIT_FAILURE);
-//         }
+    std::map<int, std::string> message_queues;
 
-//         address.sin_family = AF_INET;
-//         address.sin_addr.s_addr = inet_addr(addr->first.c_str());
-//         address.sin_port = htons(addr->second);
+	setAddressesToListen();
 
-//         if (bind(server_socket, (struct sockaddr *)&address, sizeof(address)) < 0)
-// 		{
-//             perror("bind failed");
-//             close(server_socket);
-//             exit(EXIT_FAILURE);
-//         }
+    // Create and bind server sockets for each address
+    for (std::vector<std::pair<std::string, int> >::const_iterator addr = _addresses.begin(); addr != _addresses.end(); ++addr)
+	{
+        int server_socket;
+        if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+		{
+            perror("socket failed");
+            exit(EXIT_FAILURE);
+        }
 
-//         if (listen(server_socket, 3) < 0)
-// 		{
-//             perror("listen");
-//             close(server_socket);
-//             exit(EXIT_FAILURE);
-//         }
+        int opt = 1;
+        if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
+		{
+            perror("setsockopt");
+            close(server_socket);
+            exit(EXIT_FAILURE);
+        }
 
-//         _serverSockets.push_back(server_socket);
-//         std::cout << "Listening on " << addr->first << ":" << addr->second << std::endl;
-//     }
+        _address.sin_family = AF_INET;
+        _address.sin_addr.s_addr = inet_addr(addr->first.c_str());
+        _address.sin_port = htons(addr->second);
 
-//     while (true)
-// 	{
-//         FD_ZERO(&readfds);
-//         FD_ZERO(&writefds);
-//         FD_ZERO(&exceptfds);
+        if (bind(server_socket, (struct sockaddr *)&_address, sizeof(_address)) < 0)
+		{
+            perror("bind failed");
+            close(server_socket);
+            exit(EXIT_FAILURE);
+        }
 
-//         _maxFd = 0;
+        if (listen(server_socket, 3) < 0)
+		{
+            perror("listen");
+            close(server_socket);
+            exit(EXIT_FAILURE);
+        }
 
-//         // Add server sockets to set
-//         for (std::vector<int>::const_iterator serverSocket = _serverSockets.begin(); serverSocket != _serverSockets.end(); ++serverSocket)
-// 		{
-//             FD_SET(*serverSocket, &readfds);
-//             if (*serverSocket > _maxFd)
-// 			{
-//                 _maxFd = *serverSocket;
-//             }
-//         }
+        _serverSockets.push_back(server_socket);
+        std::cout << "Listening on " << addr->first << ":" << addr->second << std::endl;
+    }
 
-//         // Add client sockets to set
-//         for (std::vector<int>::const_iterator clientSocket = _clientSockets.begin(); clientSocket != _clientSockets.end(); ++clientSocket)
-// 		{
-//             sd = *clientSocket;
-//             FD_SET(sd, &readfds);
-//             FD_SET(sd, &writefds);
-//             FD_SET(sd, &exceptfds);
-//             if (sd > _maxFd)
-// 			{
-//                 _maxFd = sd;
-//             }
-//         }
+    while (true)
+	{
+        FD_ZERO(&_readfds);
+        FD_ZERO(&_writefds);
+        FD_ZERO(&_exceptfds);
 
-//         int activity = select(_maxFd + 1, &readfds, &writefds, &exceptfds, nullptr);
+        _maxFd = 0;
 
-//         if ((activity < 0) && (errno != EINTR))
-// 		{
-//             std::cerr << "select error" << std::endl;
-//         }
+		addServerSocketsToSet();
+		addClientSocketsToSet();
 
-//         // Handle new connections
-//         for (std::vector<int>::const_iterator serverSocket = _serverSockets.begin(); serverSocket != _serverSockets.end(); ++serverSocket)
-// 		{
-//             if (FD_ISSET(*serverSocket, &readfds))
-// 			{
-//                 int newSocket = accept(*serverSocket, (struct sockaddr *)&address, (socklen_t*)&addrlen);
-//                 if (newSocket < 0)
-// 				{
-//                     perror("accept");
-//                     exit(EXIT_FAILURE);
-//                 }
-//                 std::cout << "New connection, socket fd is " << newSocket << ", ip is : " << inet_ntoa(address.sin_addr) << ", port: " << ntohs(address.sin_port) << std::endl;
-//                 _clientSockets.push_back(newSocket);
-//                 message_queues[newSocket] = "";
-//             }
-//         }
+        int activity = select(_maxFd + 1, &_readfds, &_writefds, &_exceptfds, NULL);
 
-//         // Handle IO operations on client sockets
-//         for (std::vector<int>::const_iterator clientSocket = _clientSockets.begin(); clientSocket != _clientSockets.end(); )
-// 		{
-//             sd = *clientSocket;
-//             if (FD_ISSET(sd, &readfds))
-// 			{
-//                 int valread = read(sd, buffer, 1024);
-//                 if (valread == 0)
-// 				{
-//                     getpeername(sd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
-//                     std::cout << "Host disconnected, ip " << inet_ntoa(address.sin_addr) << ", port " << ntohs(address.sin_port) << std::endl;
-//                     close(sd);
-//                     clientSocket = _clientSockets.erase(clientSocket);
-//                     message_queues.erase(sd);
-//                 } 
-// 				else
-// 				{
-//                     buffer[valread] = '\0';
-//                     std::string message(buffer);
-//                     std::cout << "Received message: " << message << std::endl;
-//                     message_queues[sd] += message;
-//                     ++clientSocket;
-//                 }
-//             }
-// 			else if (FD_ISSET(sd, &writefds))
-// 			{
-//                 if (!message_queues[sd].empty())
-// 				{
-//                     const std::string& msg = message_queues[sd];
-//                     int sent_bytes = send(sd, msg.c_str(), msg.size(), 0);
-//                     if (sent_bytes > 0)
-// 					{
-//                         message_queues[sd].erase(0, sent_bytes);
-//                     }
-//                 }
-//                 ++clientSocket;
-//             }
-// 			else if (FD_ISSET(sd, &exceptfds))
-// 			{
-//                 std::cerr << "Exception on socket " << sd << std::endl;
-//                 close(sd);
-//                 clientSocket = _clientSockets.erase(clientSocket);
-//                 message_queues.erase(sd);
-//             }
-// 			else
-// 			{
-//                 ++clientSocket;
-//             }
-//         }
-//     }
+        if ((activity < 0) && (errno != EINTR))
+		{
+            std::cerr << "select error" << std::endl;
+        }
 
-//     for (std::vector<int>::const_iterator serverSocket = _serverSockets.begin(); serverSocket != _serverSockets.end(); ++serverSocket)
-// 	{
-//         close((*serverSocket));
-//     }
-// }
+        // Handle new connections
+		handleNewConnections();
+
+        // Handle IO operations on client sockets
+        for (std::vector<Client>::iterator client = _clients.begin(); client != _clients.end(); )
+		{
+            _sd = client->getSd();
+            if (FD_ISSET(_sd, &_readfds))
+			{
+                int valread = read(_sd, buffer, 1024);
+                if (valread == 0)
+				{
+                    getpeername(_sd, (struct sockaddr*)&_address, (socklen_t*)&_addrlen);
+                    std::cout << "Host disconnected, ip " << inet_ntoa(_address.sin_addr) << ", port " << ntohs(_address.sin_port) << std::endl;
+                    close(_sd);
+                    client = _clients.erase(client);
+                    message_queues.erase(_sd);
+                }
+				else
+				{
+                    buffer[valread] = '\0';
+                    std::string message(buffer);
+                    std::cout << "Received message: " << message << std::endl;
+                    message_queues[_sd] += message;
+                    ++client;
+                }
+            }
+			else if (FD_ISSET(_sd, &_writefds))
+			{
+                if (!message_queues[_sd].empty())
+				{
+                    const std::string& msg = message_queues[_sd];
+                    int sent_bytes = send(_sd, msg.c_str(), msg.size(), 0);
+                    if (sent_bytes > 0)
+					{
+                        message_queues[_sd].erase(0, sent_bytes);
+                    }
+                }
+                ++client;
+            }
+			else if (FD_ISSET(_sd, &_exceptfds))
+			{
+                std::cerr << "Exception on socket " << _sd << std::endl;
+                close(_sd);
+                client = _clients.erase(client);
+                message_queues.erase(_sd);
+            }
+			else
+			{
+                ++client;
+            }
+        }
+    }
+
+    for (std::vector<int>::const_iterator serverSocket = _serverSockets.begin(); serverSocket != _serverSockets.end(); ++serverSocket)
+	{
+        close((*serverSocket));
+    }
+}
 
 ServerManager::ServerManager(std::vector<VirtualServer> servers): _servers(servers) {}
