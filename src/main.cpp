@@ -17,6 +17,7 @@ int	main(int argc, char **argv)
 	{
 		config.parseConf();
 		ServerManager server(config.getServers());
+		server.run();
 		//server.setAddressesToListen();
 
 	}

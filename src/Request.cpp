@@ -55,6 +55,9 @@ void Request::parse(const std::string& data)
         }
     }
 
+    //IF THERE IS A BODY MUST USE CONTENT-LENGTH FIELD (orTransfer-Encoding: chunked)
+    //IF NO FIELD BUT BODY, BAD REQUEST
+
     // Parse body (if any)
 	if (std::getline(requestStream, _body))
 	{

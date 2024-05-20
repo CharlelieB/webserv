@@ -66,6 +66,11 @@ void	ServerManager::addServerSocketsToSet()
 	}
 }
 
+void    ServerManager::processRequest(Client &client, const std::string& request)
+{
+
+}
+
 void	ServerManager::run()
 {
     _addrlen = sizeof(_address);
@@ -154,8 +159,8 @@ void	ServerManager::run()
 				else
 				{
                     buffer[valread] = '\0';
-                    std::string message(buffer);
-                    std::cout << "Received message: " << message << std::endl;
+                    client->setBuffer(buffer);
+                    processRequest(*client);
                     // message_queues[_sd] += message;
                     ++client;
                 }
