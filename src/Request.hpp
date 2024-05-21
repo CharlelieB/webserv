@@ -6,7 +6,7 @@
 class Request
 {
 	private:
-		std::string _methods;
+		std::string _method;
 		std::string _url;
 		// std::string _host;
 		std::string _httpVersion;
@@ -15,4 +15,8 @@ class Request
 	public:
 		void parse(const std::string& data);
 		std::map<std::string, std::string> getHeaders() const;
+		void    setMethod(const std::string& method);
+		void    setUrl(const std::string& url);
+		void    setHttpVersion(const std::string& version);
+		void	addHeader(const std::string& key, const std::string& value);
 };

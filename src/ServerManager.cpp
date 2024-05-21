@@ -74,7 +74,7 @@ void    ServerManager::processRequest(Client &client, const std::string& request
 void	ServerManager::run()
 {
     _addrlen = sizeof(_address);
-    char buffer[1024];
+    char buffer[8000];
 
     //std::map<int, std::string> message_queues;
 
@@ -147,7 +147,7 @@ void	ServerManager::run()
             _sd = client->getSd();
             if (FD_ISSET(_sd, &_readfds))
 			{
-                int valread = read(_sd, buffer, 1024);
+                int valread = read(_sd, buffer, 8000);
                 if (valread == 0)
 				{
                     getpeername(_sd, (struct sockaddr*)&_address, (socklen_t*)&_addrlen);

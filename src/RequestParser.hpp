@@ -13,4 +13,6 @@ class RequestParser
 	    enum State { START, HEADERS, BODY, COMPLETE };
 		RequestParser();
 		void	parse(Client& client);
+		size_t	parseRequestLine(Client& client);
+		size_t    parseHeaders(Client& client);
 };
