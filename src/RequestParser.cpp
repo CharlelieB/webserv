@@ -23,6 +23,19 @@ std::vector<std::string> split(const std::string &str, char delimiter)
     return tokens;
 }
 
+bool    RequestParser::parseMethods(const std::string& method)
+{
+    if (method == "GET")
+        _currentRequest.setMethod(_currentRequest.GET);
+    else if (method == "POST")
+        _currentRequest.setMethod(_currentRequest.POST);
+    else if (method == "DELETE")
+        _currentRequest.setMethod(_currentRequest.DELETE);
+    else
+        return false;
+    return true;
+}
+
 size_t RequestParser::parseRequestLine(Client& client)
 {
         size_t parsedBytes = 0;
@@ -36,9 +49,15 @@ size_t RequestParser::parseRequestLine(Client& client)
 	        {
                 throw std::runtime_error("request line parse error");
             }
-            _currentRequest.setMethod(requestLine[0]);
+
+            if (!parseMethods(requestLine[0]))
+                throw std::runtime_error("wrong method");
+
             _currentRequest.setUrl(requestLine[1]);
-            _currentRequest.setHttpVersion(requestLine[2]);
+
+            if (requestLine[2] != "HTTP/1.1")
+                throw std::runtime_error("wrong http version");
+
             parsedBytes = pos + 2;
         }
         return parsedBytes;
@@ -84,46 +103,46 @@ void	RequestParser::parse(Client& client)
     size_t parsedLen = 0;
     while (!client.getBuffer().empty())
 	{
-        switch (_state)
-		{
-            case START:
+    //     switch (_state)
+	// 	{
+    //         case START:
                 parsedLen = parseRequestLine(client);
                 if (parsedLen > 0)
 				{
                     client.eraseFromBuffer(0, parsedLen);
-                    _state = HEADERS;
+                    // _state = HEADERS;
 					//handle bad request here (set _currentResponse to 400)
                 }
-                break;
-            case HEADERS:
-                parsedLen = parseHeaders(client);
-                if (parsedLen > 0)
-				{
-                	client.eraseFromBuffer(0, parsedLen);
-                    _state = BODY;
-                }
-                break;
-            case BODY:
-                parsedLen = parseBody(client);
-                if (parsedLen > 0)
-				{
-                	client.eraseFromBuffer(0, parsedLen);
-                    _state = COMPLETE;
-                }
-                break;
-            case COMPLETE:
-                client.addRequest(_currentRequest);
-				client.addResponse(_currentResponse);
-				// Reset for the potential next request
-                _currentRequest = Request();
-                _currentResponse = Response();
-                _state = START;
-                break;
-        }
+    //             break;
+    //         case HEADERS:
+    //             parsedLen = parseHeaders(client);
+    //             if (parsedLen > 0)
+	// 			{
+    //             	client.eraseFromBuffer(0, parsedLen);
+    //                 _state = BODY;
+    //             }
+    //             break;
+    //         case BODY:
+    //             parsedLen = parseBody(client);
+    //             if (parsedLen > 0)
+	// 			{
+    //             	client.eraseFromBuffer(0, parsedLen);
+    //                 _state = COMPLETE;
+    //             }
+    //             break;
+    //         case COMPLETE:
+    //             client.addRequest(_currentRequest);
+	// 			client.addResponse(_currentResponse);
+	// 			// Reset for the potential next request
+    //             _currentRequest = Request();
+    //             _currentResponse = Response();
+    //             _state = START;
+    //             break;
+    //     }
     }
 }
 
-RequestParser::RequestParser() : _state(START) {}
+// RequestParser::RequestParser() : _state(START) {}
 
 /*
 Make sure we handle the next request (if there is any) even if the previous request was a bad request

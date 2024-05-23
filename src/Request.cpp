@@ -4,7 +4,7 @@
 #include <sstream>
 #include <vector>
 
-void    Request::setMethod(const std::string& method)
+void    Request::setMethod(enum eMethods method)
 {
     _method = method;
 }
@@ -14,10 +14,10 @@ void    Request::setUrl(const std::string& url)
     _url = url;
 }
 
-void    Request::setHttpVersion(const std::string& version)
-{
-    _httpVersion = version;
-}
+// void    Request::setHttpVersion(const std::string& version)
+// {
+//     _httpVersion = version;
+// }
 
 void	Request::addHeader(const std::string& key, const std::string& value)
 {

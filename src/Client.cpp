@@ -7,7 +7,7 @@ int Client::getSd() const
 
 void	Client::addRequest(Request request)
 {
-	_requests.push(request);
+	_request = request;
 }
 
 void	Client::setBuffer(const char *buffer)

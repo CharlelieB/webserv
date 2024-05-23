@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <algorithm>
 #include <cerrno>
+#include "RequestParser.hpp"
 
 void	ServerManager::setAddressesToListen()
 {
@@ -66,10 +67,10 @@ void	ServerManager::addServerSocketsToSet()
 	}
 }
 
-void    ServerManager::processRequest(Client &client, const std::string& request)
-{
+// void    ServerManager::processRequest(Client &client, const std::string& request)
+// {
 
-}
+// }
 
 void	ServerManager::run()
 {
@@ -160,8 +161,11 @@ void	ServerManager::run()
 				{
                     buffer[valread] = '\0';
                     client->setBuffer(buffer);
-                    processRequest(*client);
+                    // processRequest(*client);
                     // message_queues[_sd] += message;
+                    std::cout << client->getBuffer() << std::endl;
+                    RequestParser parser;
+                    parser.parse(*client);
                     ++client;
                 }
             }

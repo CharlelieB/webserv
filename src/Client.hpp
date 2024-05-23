@@ -11,8 +11,8 @@ class Client
 		Client();
 		int	_sd;
 		std::string _buffer;
-		std::queue<Request> _requests;
-		std::queue<Response> _responses;
+		Request _request;
+		Response _response;
 	public:
 		Client(int sd);
 		int	getSd() const;
