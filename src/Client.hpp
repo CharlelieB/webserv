@@ -20,7 +20,7 @@ class Client
 		Client(int sd);
 		int	getSd() const;
 		void	setBuffer(const char *buffer);
-		const std::string&	getBuffer() const;
-		void	eraseFromBuffer(size_t pos, size_t len);
+		// const std::string&	getBuffer() const;
 		bool	readRequest();
+		void	buildResponse(const std::vector<VirtualServer>& _servers);
 };

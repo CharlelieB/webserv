@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <cstdlib>
+
 int Request::parseBodyLength(const std::string& str)
 {
     char* p;
@@ -97,7 +98,7 @@ bool    Request::parseHeaders(const std::string& line)
     return true;
 }
 
-void Request::parseBody()
+void Request::parseBody(const std::istringstream& raw)
 {
     std::map<std::string, std::string>::const_iterator it = _headers.find("Content-length");
 
@@ -117,7 +118,7 @@ void Request::parseBody()
         return ;
     }
 
-    _body = _raw.str(); 
+    _body = raw.str();
 
     if (_body.size() != static_cast<unsigned int>(contentLen))
     {
@@ -130,9 +131,10 @@ void Request::parseBody()
 
 void Request::parse()
 {
+    std::istringstream raw(_rawData);
     std::string line;
 
-    while (std::getline(_raw, line))
+    while (std::getline(raw, line))
     {
         if (_state != PARSING_BODY && line[line.size() - 1] != '\r')
         {
@@ -151,7 +153,7 @@ void Request::parse()
                     return ;
                 break;
             case PARSING_BODY:
-                parseBody();
+                parseBody(raw);
                 break;
             case PARSING_COMPLETE:
                 return ;
@@ -208,4 +210,14 @@ void	Request::addHeader(const std::string& key, const std::string& value)
     _headers[key] = value;
 }
 
-Request::Request(const std::string& data): _status(200), _raw(data) {}
+void	Request::setRawData(const std::string& data)
+{
+    _rawData = data;
+}
+
+int Request::getStatus() const
+{
+    return _status;
+}
+
+Request::Request(): _status(200) {}

@@ -150,7 +150,11 @@ void	ServerManager::run()
                 if (!client->readRequest())
                     client = _clients.erase(client);
                 else
+                {
+                    client->findVirtualServer(_servers);
+                    client->buildResponse(_servers);
                     ++client;
+                }
             }
 			else if (FD_ISSET(_sd, &_writefds))
 			{

@@ -1,7 +1,19 @@
-#include "Client.hpp"
 #include <unistd.h>
 #include <sys/socket.h>
 #include <iostream>
+
+#include "Client.hpp"
+#include "VirtualServer.hpp"
+
+void	Client::buildResponse(const std::vector<VirtualServer>& servers)
+{
+	_response.build(servers, _request);
+}
+
+void	Client::findVirtualServer(const std::vector<VirtualServer>& servers)
+{
+
+}
 
 bool	Client::readRequest()
 {
@@ -17,9 +29,9 @@ bool	Client::readRequest()
 	_buffer[bytesRead] = '\0';
 	std::cout << _buffer << std::endl;
 
-std::string s(_buffer, bytesRead);
+	std::string s(_buffer, bytesRead);
 
-	this->_request = Request(s);
+	this->_request.setRawData(s);
 	this->_request.parse();
 	return true;
 }
@@ -29,14 +41,9 @@ int Client::getSd() const
 	return _sd;
 }
 
-const std::string&	Client::getBuffer() const
-{
-	return _buffer;
-}
-
-// void	Client::eraseFromBuffer(size_t pos, size_t len) 
+// const std::string&	Client::getBuffer() const
 // {
-// 	_buffer.erase(pos, len);
+// 	return _buffer;
 // }
 
 Client::Client(int sd): _sd(sd) {}

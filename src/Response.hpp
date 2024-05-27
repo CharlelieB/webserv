@@ -4,9 +4,11 @@
 
 class Response
 {
-	private:
-		// int _statusCode;
-		// std::string _body;
 	public:
-		// Response();
+		Response();
+		void	build(const std::vector<VirtualServer>& servers, const Request &request);
+	private:
+		int _statusCode;
+		std::string _body;
+		size_t contentLength;
 };

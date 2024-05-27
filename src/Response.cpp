@@ -1,3 +1,13 @@
-#include "Response.hpp"
+#include <vector>
 
-// Response::Response(): _statusCode(200) {}
+#include "Response.hpp"
+#include "Request.hpp"
+#include "VirtualServer.hpp"
+
+void	Response::build(const std::vector<VirtualServer>& servers, const Request &request)
+{
+	_statusCode = request.getStatus();
+
+}
+
+Response::Response() {}
