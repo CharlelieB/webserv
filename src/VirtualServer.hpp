@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 #include "Route.hpp"
 
@@ -15,7 +16,8 @@ class VirtualServer
 		size_t _bodySize;
 		int _port;
 		std::vector<std::string> _serverNames;
-		std::vector<Route> _routes;
+		//std::vector<Route> _routes; //must change to u map with location as key
+		std::unordered_map<std::string, Route> _routes;
 	public:
 		VirtualServer();
 		void setHost(const std::string& host);
@@ -24,10 +26,11 @@ class VirtualServer
 		void setBodySize(size_t size);
 		void setPort(int port);
 		void setServerNames(const std::string& serverName);
-		void setRoutes(const Route& route);
+		void setRoutes(const std::string& key, const Route& route);	
 
 		int getPort() const;
 		std::string getHost() const;
+		std::unordered_map<std::string, Route> getRoutes() const;
 
 		// bool operator<(const VirtualServer& other) const
 		// {

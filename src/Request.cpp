@@ -220,4 +220,14 @@ int Request::getStatus() const
     return _status;
 }
 
+Request::eMethods   Request::getMethod() const
+{
+    return _method;
+}
+
+std::string	Request::getUrl() const
+{
+    return _url;
+}
+
 Request::Request(): _status(200) {}

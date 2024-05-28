@@ -35,7 +35,8 @@ class Request
 		void	addHeader(const std::string& key, const std::string& value);
 
 		int	getStatus() const;
-		int	getStatus() const;
+		eMethods	getMethod() const;
+		std::string	getUrl() const;
 	private:
 		enum eState	_state;
 		enum eMethods _method;

@@ -213,7 +213,7 @@ void Parser::parseLocation(VirtualServer& server)
 	{
 		if (check(C_BRACKET))
 		{
-			return server.setRoutes(route);
+			return server.setRoutes(route.getLocation(), route);
 		}
 		if (check(WORD))
 		{

@@ -7,6 +7,7 @@
 
 void	Client::buildResponse(const std::vector<VirtualServer>& servers)
 {
+	//find the right conf (virtual server) here
 	_response.build(servers, _request);
 }
 

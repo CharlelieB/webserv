@@ -15,11 +15,6 @@ void Route::setRedirection(const std::string& url)
 	this->_redirection = url;
 }
 
-void Route::setDefaultFile(const std::string& file)
-{
-	this->_defaultFile = file;
-}
-
 void Route::setRoot(const std::string& root)
 {
 	this->_root = root;
@@ -38,6 +33,11 @@ void Route::setCgiPath(const std::string& path)
 void Route::setAutoIndex(bool enabled)
 {
 	this->_autoIndex = enabled;
+}
+
+std::string Route::getLocation() const
+{
+	return _location;
 }
 
 //Constructor

@@ -30,9 +30,9 @@ void VirtualServer::setServerNames(const std::string& serverName)
 	this->_serverNames.push_back(serverName);
 }
 
-void VirtualServer::setRoutes(const Route& route)
+void VirtualServer::setRoutes(const std::string& key, const Route& route)
 {
-	this->_routes.push_back(route);
+	this->_routes[key] = route;
 }
 
 //Getters
@@ -47,6 +47,10 @@ std::string VirtualServer::getHost() const
 	return this->_host;
 }
 
+std::unordered_map<std::string, Route> VirtualServer::getRoutes() const
+{
+	return _routes;
+}
 
 //Constructor
-VirtualServer::VirtualServer(): _host("0.0.0.0"), _bodySize(0), _port(80) {}
+VirtualServer::VirtualServer(): _host("0.0.0.0"), _bodySize(1000000), _port(80) {}
