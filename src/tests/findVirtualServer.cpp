@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 struct Server
 {
@@ -11,33 +12,33 @@ struct Server
 	std::vector<std::string> serverNames;
 };
 
-struct Request
-{
-	std::string host;
-	std::string ipPort;
-};
-
 struct ServerManager
 {
 	std::multimap<std::string, Server> servers;
 };
 
-
-void findVirtualServer(const std::multimap<std::string, Server>& servers)
+struct Request
 {
-	Request req;
+	std::string host;
+	std::string listen;
+	size_t port;
+};
 
-	req.host = "example.caca";
-	req.ipPort = "127.0.0.1:80";
-
+void findVirtualServer(const std::multimap<std::string, Server>& servers, const Request& req)
+{
     std::pair<std::multimap<std::string, Server>::const_iterator, std::multimap<std::string, Server>::const_iterator> range;
-    range = servers.equal_range(req.ipPort);
+    range = servers.equal_range(req.listen);
 
 	if (range.first == range.second)
 	{
 		//search for a port matching with all addresses
 		std::cout << "no ip:port match, trying *.port match" << std::endl;
-		range = servers.equal_range("0.0.0.0:8080");
+		
+		std::ostringstream str;
+    	str << req.port;
+    	std::string portStr = str.str();
+ 
+		range = servers.equal_range("0.0.0.0:" + portStr);
 		if (range.first == range.second)
 		{
 			//i believe this case is impossible bc we setup our sockets based on the conf file so the request should match,
@@ -49,6 +50,7 @@ void findVirtualServer(const std::multimap<std::string, Server>& servers)
 	//filter by server_name (based on Host header field)
 
 	std::multimap<std::string, Server>::const_iterator it = range.first;
+	std::multimap<std::string, Server>::const_iterator begin = it;
 
 	for (; it != range.second; ++it)
 	{
@@ -60,10 +62,10 @@ void findVirtualServer(const std::multimap<std::string, Server>& servers)
 				return ;
 			}
 		}
-		std::cout << it->first << " - " << it->second.serverNames.front() << std::endl;
+		//std::cout << it->first << " - " << it->second.serverNames.front() << std::endl;
 	}
 
-	std::cout << "No match based on server_name so use the first ip:port match " << it->first << " - " << it->second.serverNames.front() << std::endl;
+	std::cout << "No match based on server_name, the first ip:port match is " << begin->first << " - " << begin->second.serverNames.front() << std::endl;
 }
 
 int main()
@@ -106,32 +108,25 @@ int main()
 	manager.servers.insert(std::make_pair(serv4.ipPort, serv4));
 	manager.servers.insert(std::make_pair(serv5.ipPort, serv5));
 
-	findVirtualServer(manager.servers);
+	Request req;
+	std::cout << "[TEST] Server_name match :" << std::endl;
+	req.host = "example.org";
+	req.listen = "127.0.0.1:80";
+	req.port = 80;
 
+	findVirtualServer(manager.servers, req);
+
+	std::cout << "[TEST] No server_name match :" << std::endl;
+	req.host = "example.io";
+	req.listen = "127.0.0.1:80";
+	req.port = 80;
+
+	findVirtualServer(manager.servers, req);
+
+	std::cout << "[TEST] No ip match, find block with *:port match :" << std::endl;
+	req.host = "example.fr";
+	req.listen = "148.0.1.1:8080";
+	req.port = 8080;
+
+	findVirtualServer(manager.servers, req);
 }
-
-
-/*
-conf
-
-port 80
-addr *
-
-port 8080
-addr *
-
-port 8080
-addr 127.0.0.1
-
-port 8080
-addr 127.0.0.1
-
-port 80
-addr 127.0.0.1
-
-look for a ip/port pair match
-	if not found, look for a port matching for addr that are * (0.0.0.0) if any
-if multiple result, try to find a match with server name
-if no result use first block that match
-
-*/
