@@ -1,4 +1,5 @@
 #include <vector>
+#include <sstream>
 
 #include "Response.hpp"
 #include "Request.hpp"
@@ -8,8 +9,16 @@
 void Response::openFile(const std::string& root, const std::string& file) {}
 void Response::createFile(const std::string& root, const std::string& file) {
 	//what to do if file already exists? (409 Conflict?)
+	//what to do if path is a folder?
 }
 
+void	Response::generateStartLine()
+{
+	std::ostringstream os;
+	
+	os << "HTTP/1.1 " << _statusCode << " " << statusMessage[_statusCode] << "\r\n";
+	_header = os.str();
+}
 
 void	Response::build(const VirtualServer& server, const Request &request)
 {
@@ -39,6 +48,7 @@ void	Response::build(const VirtualServer& server, const Request &request)
 	//if POST, look if rights are ok and create a file then write the content in it, ensure to respect max_body_size of conf
 
 	//if status != 200 check if error page is setup and read the content of the page
+	generateStartLine();
 }
 
 Response::Response() {}

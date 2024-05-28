@@ -12,3 +12,10 @@ gestion de la memoire (pas de crash)
 gestion de la securite de base (restriction d'acces)
 CGI
 stress test
+
+
+Task
+
+Change conf parsing and data structure so ServerManager use a multimap for virtual servers instead of vector
+Change setAddressesToListen() : iterate multimap instead
+Think about remove virtualServer block that have wrong addresses? 
