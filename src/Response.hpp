@@ -13,15 +13,20 @@ class Response
 			{404, "Not Found"},
 			{405, "Method Not Allowed"},
 			{411, "Length Required"},
+			{413, "Request Entity Too Large"}, //for client_max_body_size
 			{500, "Internal Server Error"},
 			{505, "HTTP Version Not Supported"}
 		};
 		Response();
 		void	build(const VirtualServer& server, const Request &request);
 		void	generateStartLine();
+		void	getRessource();
+		void	postRessource();
+		void	buildDirectoryListing();
 	private:
 		int _statusCode;
 		std::string _header;
 		std::string _body;
-		size_t contentLength;
+		size_t _contentLength;
+		std::string _rootedPath;
 };

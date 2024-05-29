@@ -52,5 +52,17 @@ std::unordered_map<std::string, Route> VirtualServer::getRoutes() const
 	return _routes;
 }
 
+std::string VirtualServer::getErrorPage(int status) const
+{
+	std::string page = "";
+
+	std::map<int, std::string>::const_iterator it = _errorPages.find(status);
+	
+	if (it != _errorPages.end())
+		page = it->first;
+	
+	return page;
+}
+
 //Constructor
 VirtualServer::VirtualServer(): _host("0.0.0.0"), _bodySize(1000000), _port(80) {}

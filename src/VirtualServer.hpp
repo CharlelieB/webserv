@@ -31,6 +31,7 @@ class VirtualServer
 		int getPort() const;
 		std::string getHost() const;
 		std::unordered_map<std::string, Route> getRoutes() const;
+		std::string	getErrorPage(int status) const;
 
 		// bool operator<(const VirtualServer& other) const
 		// {
