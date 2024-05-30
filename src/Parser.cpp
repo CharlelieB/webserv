@@ -150,9 +150,14 @@ void Parser::parseLimit(Route& route, const std::vector<std::string>& args)
 	
 	for (std::vector<std::string>::const_iterator it = args.begin() + 1; it != args.end(); ++it)
 	{
-		if (*it != "GET" && *it != "POST" && *it != "DELETE")
+		if (*it == "GET")
+			route.setMethods(Methods::GET, true);
+		else if (*it == "POST")
+			route.setMethods(Methods::POST, true);
+		else if (*it == "DELETE")
+			route.setMethods(Methods::DELETE, true);
+		else
 			throwParseError(args[0] + ": wrong method");
-		route.setMethods(*it, true);
 	}
 }
 

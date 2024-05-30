@@ -38,11 +38,11 @@ std::vector<std::string> split(const std::string &str, char delimiter)
 bool    Request::parseMethods(const std::string& method)
 {
     if (method == "GET")
-        _method = GET;
+        _method = Methods::GET;
     else if (method == "POST")
-        _method = POST;
+        _method = Methods::POST;
     else if (method == "DELETE")
-        _method = DELETE;
+        _method = Methods::DELETE;
     else
         return false;
     return true;
@@ -190,7 +190,7 @@ std::map<std::string, std::string> Request::getHeaders() const
 
 //setters
 
-void    Request::setMethod(enum eMethods method)
+void    Request::setMethod(Methods::eMethods method)
 {
     _method = method;
 }
@@ -220,7 +220,7 @@ int Request::getStatus() const
     return _status;
 }
 
-Request::eMethods   Request::getMethod() const
+Methods::eMethods   Request::getMethod() const
 {
     return _method;
 }

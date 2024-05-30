@@ -9,6 +9,20 @@
 #include "Request.hpp"
 #include "VirtualServer.hpp"
 
+
+const std::unordered_map<int, std::string> statusMessage =
+{
+	{200, "OK"},
+	{301, "Moved Permanently"},
+	{400, "Bad Request"},
+	{404, "Not Found"},
+	{405, "Method Not Allowed"},
+	{411, "Length Required"},
+	{413, "Request Entity Too Large"}, //for client_max_body_size
+	{500, "Internal Server Error"},
+	{505, "HTTP Version Not Supported"}
+};
+
 void	Response::buildDirectoryListing()
 {
 	std::string h1 = "<h1>Index of" + _rootedPath + "</h1>";
@@ -34,10 +48,16 @@ void	Response::buildDirectoryListing()
 	_body = h1 + list;
 }
 
-bool	fileExists(const std::string& path)
+bool	Response::checkFile(const std::string& path)
 {
-  struct stat buffer;
-  return (stat(path.c_str(), &buffer) == 0); 
+	struct stat buffer;
+	bool	fileExists;
+
+	fileExists = stat(path.c_str(), &buffer) == 0;
+
+	if (fileExists)
+  		_pathIsDir = S_ISDIR(buffer.st_mode);
+	return fileExists;
 }
 
 //prevent Directory traversal attack by removing ../ from path
@@ -46,12 +66,6 @@ std::string generatePath(const std::string& root, const std::string& file) {}
 //Note use stat to know if path is file or dir
 void Response::getRessource()
 {
-	if (!fileExists(_rootedPath))
-	{
-		_statusCode = 404;
-		return;
-	}
-
 	std::ifstream file(_rootedPath, std::ios_base::in);
 
 	if (!file.is_open())
@@ -83,6 +97,37 @@ void	Response::generateStartLine()
 	_header = os.str();
 }
 
+void	buildPath() {}
+
+void	Response::handleGet(const Route *route)
+{
+	if (_pathIsDir)
+	{
+		std::string root = route->getIndex();
+		if (!root.empty())
+			buildPath(root);
+		else if (route->getAutoIndex())
+			buildDirectoryListing();
+		else
+			return;
+	}
+	getRessource();
+}
+
+void	Response::checkLocationRules()
+{
+	if (!checkFile(_rootedPath))
+	{
+		_statusCode = 404;
+		return;
+	}
+	if (!route->isMethodAllowed((request.getMethod())))
+	{
+		_statusCode = 405;
+		return;
+	}
+}
+
 void	Response::build(const VirtualServer& server, const Request &request)
 {
 	Route *route = NULL;
@@ -90,29 +135,19 @@ void	Response::build(const VirtualServer& server, const Request &request)
 
 	_statusCode = request.getStatus();
 
-	// std::unordered_map<std::string, Route>::const_iterator it;
-	// it = server.getRoutes().find(request.getUrl());
-	// if (it != server.getRoutes().end())
-	// {
-	// 	route = it->second;
-	// 	routeFound = true;
-	// }
+	checkLocationRules();
 
 	//here save the rooted path based on location block matching 
 	//route = findRoute();
 
+	//build rootedPath here
+
+	
 	if (_statusCode == 200)
 	{
-		if (request.getMethod() == Request::GET)
-		{
-			//check if path is a directory and do directory stuff, else read the file
-			// if (dir && directory_listing)
-			// {
-				//buildDirectoryListing();
-			//}
-			//getRessource();
-		}
-		else if (request.getMethod() == Request::POST)
+		if (request.getMethod() == Methods::GET)
+			handleGet(route);
+		else if (request.getMethod() == Methods::POST)
 		{
 			//look if rights are ok and create a file then write the content in it, ensure to respect max_body_size of conf
 
@@ -131,4 +166,4 @@ void	Response::build(const VirtualServer& server, const Request &request)
 	generateStartLine();
 }
 
-Response::Response(): _contentLength(0) {}
+Response::Response(): _contentLength(0), _pathIsDir(false) {}

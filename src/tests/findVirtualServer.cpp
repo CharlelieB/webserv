@@ -70,6 +70,7 @@ void findVirtualServer(const std::multimap<std::string, Server>& servers, const 
 
 int main()
 {
+	//THINK ABOUT SERVER NAME FORMAT (server:port)
 	ServerManager manager;
 	Server serv, serv2, serv3, serv4, serv5;
 

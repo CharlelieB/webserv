@@ -18,13 +18,13 @@ int main()
 	server.setHost("127.0.0.1");
 	
 	route.setLocation("/");
-	route.setMethods("GET", true);
+	route.setMethods(Methods::GET, true);
 	route.setIndex("index.html");
 	route.setRoot("/var/www");
 
 	Request req;
 
-	req.setMethod(req.GET);
+	req.setMethod(Methods::GET);
 	req.setUrl("/");
 
 	res.build(server, req);

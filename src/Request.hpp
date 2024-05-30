@@ -4,6 +4,11 @@
 #include <map>
 #include <sstream>
 
+namespace Methods
+{
+	enum eMethods { GET, POST, DELETE };
+}
+
 class Request
 {
 	public:
@@ -13,11 +18,6 @@ class Request
 			PARSING_HEADERS,
 			PARSING_BODY,
 			PARSING_COMPLETE
-		};
-		enum eMethods {
-			GET,
-			POST,
-			DELETE
 		};
 
 		void	setRawData(const std::string& data);
@@ -29,17 +29,17 @@ class Request
 		int		parseBodyLength(const std::string& str);
 
 		std::map<std::string, std::string> getHeaders() const;
-		void    setMethod(enum eMethods method);
+		void    setMethod(Methods::eMethods method);
 		void    setUrl(const std::string& url);
 		// void    setHttpVersion(const std::string& version);
 		void	addHeader(const std::string& key, const std::string& value);
 
 		int	getStatus() const;
-		eMethods	getMethod() const;
+		Methods::eMethods	getMethod() const;
 		std::string	getUrl() const;
 	private:
 		enum eState	_state;
-		enum eMethods _method;
+		Methods::eMethods _method;
 		int	_status;
 		std::string _rawData;
 		std::string _url;

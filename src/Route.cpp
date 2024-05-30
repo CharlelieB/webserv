@@ -5,7 +5,7 @@ void Route::setLocation(const std::string& path)
 	this->_location = path;
 }
 
-void Route::setMethods(const std::string& methods, bool enabled)
+void Route::setMethods(Methods::eMethods methods, bool enabled)
 {
 	this->_methods[methods] = enabled;
 }
@@ -38,6 +38,25 @@ void Route::setAutoIndex(bool enabled)
 std::string Route::getLocation() const
 {
 	return _location;
+}
+
+std::string	Route::getIndex() const
+{
+	return _index;
+}
+
+bool	Route::getAutoIndex() const
+{
+	return _autoIndex;
+}
+
+bool	Route::isMethodAllowed(Methods::eMethods method) const
+{
+	std::map<Methods::eMethods, bool>::const_iterator it;
+	
+	it = _methods.find(method);
+
+	return (it != _methods.end());
 }
 
 //Constructor
