@@ -96,6 +96,7 @@ void	ServerManager::run()
         if (bind(server_socket, (struct sockaddr *)&_address, sizeof(_address)) < 0)
 		{
             perror("bind failed");
+            std::cout << addr->first.c_str() << std::endl;
             close(server_socket);
             exit(EXIT_FAILURE);
         }
