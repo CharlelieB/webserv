@@ -16,6 +16,9 @@ void Configuration::parseConf()
 }
 
 //Setter
-void Configuration::setServers(VirtualServer server) { _servers.push_back(server); }
+void Configuration::setServers(std::string host, VirtualServer server)
+{
+    _servers.insert(make_pair(host, server)); 
+}
 
-const std::vector<VirtualServer>& Configuration::getServers() const { return _servers; };
+const std::multimap<std::string, VirtualServer>& Configuration::getServers() const { return _servers; };

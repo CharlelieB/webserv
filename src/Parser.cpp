@@ -270,7 +270,8 @@ void Parser::parseServerBlock()
 	{
 		if (check(C_BRACKET))
 		{
-			return this->_config.setServers(server);
+			server.setIpPort();
+			return this->_config.setServers(server.getIpPort(), server);
 		}
 		if (check(WORD))
 		{

@@ -5,6 +5,37 @@
 #include <vector>
 #include <cstdlib>
 
+std::string Request::normalizePath(const std::string &path)
+{
+    std::vector<std::string> parts;
+    std::stringstream ss(path);
+    std::string part;
+    
+    while (std::getline(ss, part, '/'))
+	{
+        if (part == "" || part == ".") {
+            continue;
+        }
+		else if (part == "..")
+		{
+            if (!parts.empty())
+                parts.pop_back();
+        }
+		else
+            parts.push_back(part);
+    }
+
+    std::string normalizedPath = "/";
+    for (size_t i = 0; i < parts.size(); ++i) {
+        normalizedPath += parts[i];
+        if (i != parts.size() - 1) {
+            normalizedPath += "/";
+        }
+    }
+    
+    return normalizedPath;
+}
+
 int Request::parseBodyLength(const std::string& str)
 {
     char* p;
@@ -64,7 +95,7 @@ bool    Request::parseRequestLine(const std::string& line)
         return false;
     }
 
-    _url = requestLine[1];
+    _url = normalizePath(requestLine[1]);
     
     if (requestLine[2] != "HTTP/1.1")
     {
@@ -102,6 +133,7 @@ void Request::parseBody(const std::istringstream& raw)
 {
     std::map<std::string, std::string>::const_iterator it = _headers.find("Content-length");
 
+    //Content length is required to post a body
     if (it == _headers.end())
     {
         _status = 411;
@@ -110,6 +142,16 @@ void Request::parseBody(const std::istringstream& raw)
     }
 
     int contentLen = parseBodyLength(it->second);
+
+    //if no Host field, bad request
+    it = _headers.find("Host");
+
+    if (it == _headers.end())
+    {
+        _status = 400;
+        _state = PARSING_COMPLETE;
+        return ;
+    }
 
     if (contentLen == -1)
     {
@@ -159,75 +201,28 @@ void Request::parse()
                 return ;
         }
     }
-
-
-    // // Parse headers
-    // while (std::getline(requestStream, line) && line != "\r")
-	// {
-    //     size_t pos = line.find(":");
-    //     if (pos != std::string::npos)
-	// 	{
-    //         std::string headerName = trim(line.substr(0, pos));
-    //         std::string headerValue = trim(line.substr(pos + 1));
-    //         _headers[headerName] = headerValue;
-    //     }
-    // }
-
-    // //IF THERE IS A BODY MUST USE CONTENT-LENGTH FIELD (orTransfer-Encoding: chunked)
-    // //IF NO FIELD BUT BODY, BAD REQUEST
-
-    // // Parse body (if any)
-	// if (std::getline(requestStream, _body))
-	// {
-    //     _body = trim(_body);
-    // }
 }
 
-std::map<std::string, std::string> Request::getHeaders() const
+void    Request::reset()
 {
-	return _headers;
+    _status = 200;
+    _state = PARSING_REQUEST;
+	_rawData.clear();
+	_url.clear();
+	_headers.clear();
+	_body.clear();
 }
 
-//setters
+std::map<std::string, std::string> Request::getHeaders() const { return _headers; }
 
-void    Request::setMethod(Methods::eMethods method)
-{
-    _method = method;
-}
+void	Request::addHeader(const std::string& key, const std::string& value) { _headers[key] = value; }
 
-void    Request::setUrl(const std::string& url)
-{
-    _url = url;
-}
+void	Request::setRawData(const std::string& data) { _rawData = data; }
 
-// void    Request::setHttpVersion(const std::string& version)
-// {
-//     _httpVersion = version;
-// }
+int Request::getStatus() const { return _status; }
 
-void	Request::addHeader(const std::string& key, const std::string& value)
-{
-    _headers[key] = value;
-}
+Methods::eMethods Request::getMethod() const { return _method; }
 
-void	Request::setRawData(const std::string& data)
-{
-    _rawData = data;
-}
+std::string	Request::getUrl() const { return _url; }
 
-int Request::getStatus() const
-{
-    return _status;
-}
-
-Methods::eMethods   Request::getMethod() const
-{
-    return _method;
-}
-
-std::string	Request::getUrl() const
-{
-    return _url;
-}
-
-Request::Request(): _status(200) {}
+Request::Request(): _status(200), _state(PARSING_REQUEST) {}

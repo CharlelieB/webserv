@@ -38,15 +38,18 @@ class ServerManager
 		int _maxFd;
 		int _sd;
 		std::vector<std::pair<std::string, int> > _addresses;
-		std::vector<VirtualServer> _servers;
+		//std::vector<VirtualServer> _servers;
+		std::multimap<std::string, VirtualServer> _servers;
 		fd_set _readfds, _writefds, _exceptfds;
 		struct sockaddr_in _address;
 		int _addrlen;
 	public:
-		ServerManager(std::vector<VirtualServer> servers);
+		ServerManager(const std::multimap<std::string, VirtualServer> &servers);
 		void	run();
 		void	addServerSocketsToSet();
 		void	setAddressesToListen();
 		void	addClientSocketsToSet();
 		void	handleNewConnections();
+
+		std::vector<Client>::iterator removeClient(std::vector<Client>::iterator client);
 };

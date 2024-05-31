@@ -12,6 +12,7 @@ class VirtualServer
 	private:
 		std::string _host;
 		std::string _rootDirectory;
+		std::string _ipPort;
 		std::map<int, std::string> _errorPages;
 		size_t _bodySize;
 		int _port;
@@ -26,21 +27,15 @@ class VirtualServer
 		void setBodySize(size_t size);
 		void setPort(int port);
 		void setServerNames(const std::string& serverName);
-		void setRoutes(const std::string& key, const Route& route);	
+		void setRoutes(const std::string& key, const Route& route);
+		void setIpPort();
 
 		int getPort() const;
 		std::string getHost() const;
+		std::string getIpPort() const;
 		std::unordered_map<std::string, Route> getRoutes() const;
 		std::string	getErrorPage(int status) const;
+		std::vector<std::string> getServerNames() const;
 
-		// bool operator<(const VirtualServer& other) const
-		// {
-		// 	if (_host != other._host)
-		// 		return _host < other._host;
-        // 	return _port < other._port;
-		// }
-    	// bool operator==(const VirtualServer& other) const
-		// {
-        // 	return _host == other._host && _port == other._port;
-    	// }
+		Route *findRoute(const std::string& requestPath) const;
 };

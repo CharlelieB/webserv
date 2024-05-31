@@ -23,15 +23,42 @@ const std::unordered_map<int, std::string> statusMessage =
 	{505, "HTTP Version Not Supported"}
 };
 
+void	Response::addIndex(const std::string &indexFile)
+{
+    if (_ressourcePath[_ressourcePath.size() - 1] == '/')
+        _ressourcePath = _ressourcePath + indexFile;
+}
+
+void Response::rootPath(const std::string &root, const std::string &baseUrl)
+{
+    std::string baseUrlWithSlash = baseUrl;
+    if (baseUrlWithSlash[baseUrlWithSlash.size() - 1] != '/')
+        baseUrlWithSlash += "/";
+
+    std::string rootWithSlash = root;
+    if (rootWithSlash[rootWithSlash.size() - 1] != '/')
+        rootWithSlash += "/";
+
+    std::string relativeUrl;
+    if (_ressourcePath.find(baseUrlWithSlash) == 0)
+        relativeUrl = _ressourcePath.substr(baseUrlWithSlash.size());
+    else
+        relativeUrl = _ressourcePath.substr(baseUrl.size());
+
+    std::string fullPath = rootWithSlash + relativeUrl;
+
+    _ressourcePath = fullPath;
+}
+
 void	Response::buildDirectoryListing()
 {
-	std::string h1 = "<h1>Index of" + _rootedPath + "</h1>";
+	std::string h1 = "<h1>Index of" + _ressourcePath + "</h1>";
 
 	std::string list, element;
 
 	DIR *dir;
 	struct dirent *ent;
-	if ((dir = opendir (_rootedPath.c_str())) != NULL)
+	if ((dir = opendir (_ressourcePath.c_str())) != NULL)
 	{
 		while ((ent = readdir (dir)) != NULL)
 		{
@@ -60,13 +87,9 @@ bool	Response::checkFile(const std::string& path)
 	return fileExists;
 }
 
-//prevent Directory traversal attack by removing ../ from path
-std::string generatePath(const std::string& root, const std::string& file) {}
-
-//Note use stat to know if path is file or dir
 void Response::getRessource()
 {
-	std::ifstream file(_rootedPath, std::ios_base::in);
+	std::ifstream file(_ressourcePath, std::ios_base::in);
 
 	if (!file.is_open())
 	{
@@ -89,24 +112,23 @@ void Response::postRessource(const std::string& path)
 	//what to do if path is a folder?
 }
 
-void	Response::generateStartLine()
+void	Response::generateHeader()
 {
 	std::ostringstream os;
 	
-	os << "HTTP/1.1 " << _statusCode << " " << statusMessage[_statusCode] << "\r\n";
+	os << "HTTP/1.1 " << _statusCode << " " << statusMessage.find(_statusCode)->second << "\r\n"
+		<< "content-length:" << _body.size() << "\r\n";
 	_header = os.str();
 }
 
-void	buildPath() {}
-
-void	Response::handleGet(const Route *route)
+void	Response::handleGet()
 {
 	if (_pathIsDir)
 	{
-		std::string root = route->getIndex();
-		if (!root.empty())
-			buildPath(root);
-		else if (route->getAutoIndex())
+		std::string index = _route->getIndex();
+		if (!index.empty())
+			addIndex(index);
+		else if (_route->getAutoIndex())
 			buildDirectoryListing();
 		else
 			return;
@@ -116,12 +138,12 @@ void	Response::handleGet(const Route *route)
 
 void	Response::checkLocationRules()
 {
-	if (!checkFile(_rootedPath))
+	if (!checkFile(_ressourcePath))
 	{
 		_statusCode = 404;
 		return;
 	}
-	if (!route->isMethodAllowed((request.getMethod())))
+	if (!_route->isMethodAllowed(request.getMethod())))
 	{
 		_statusCode = 405;
 		return;
@@ -130,23 +152,24 @@ void	Response::checkLocationRules()
 
 void	Response::build(const VirtualServer& server, const Request &request)
 {
-	Route *route = NULL;
 	bool routeFound = false;
 
 	_statusCode = request.getStatus();
+	_ressourcePath = request.getUrl();
+	_route = server.findRoute(_ressourcePath);
 
-	checkLocationRules();
+	if (_route)
+	{
+		rootPath(_route->getRoot(), _route->getLocation());
+		checkLocationRules();
+	}
+	else
+		rootPath("/www", "/");
 
-	//here save the rooted path based on location block matching 
-	//route = findRoute();
-
-	//build rootedPath here
-
-	
 	if (_statusCode == 200)
 	{
 		if (request.getMethod() == Methods::GET)
-			handleGet(route);
+			handleGet();
 		else if (request.getMethod() == Methods::POST)
 		{
 			//look if rights are ok and create a file then write the content in it, ensure to respect max_body_size of conf
@@ -163,7 +186,19 @@ void	Response::build(const VirtualServer& server, const Request &request)
 
 	}
 
-	generateStartLine();
+	generateHeader();
 }
 
-Response::Response(): _contentLength(0), _pathIsDir(false) {}
+void	Response::reset()
+{
+	_header.clear();
+	_body.clear();
+	_ressourcePath.clear();
+	_contentLength = 0;
+	_pathIsDir = false;
+	_route = NULL; 
+}
+
+const std::string& Response::getBody() const { return _body; }	
+
+Response::Response(): _contentLength(0), _pathIsDir(false), _route(NULL) {}

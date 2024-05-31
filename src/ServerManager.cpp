@@ -2,16 +2,16 @@
 #include <cstdio>
 #include <algorithm>
 #include <cerrno>
-#include "RequestParser.hpp"
 #include "ServerManager.hpp"
+#include "utils.hpp"
 
 void	ServerManager::setAddressesToListen()
 {
-	for (std::vector<VirtualServer>::const_iterator it = _servers.begin(); it != _servers.end(); ++it)
+	for (std::multimap<std::string, VirtualServer>::const_iterator it = _servers.begin(); it != _servers.end(); ++it)
 	{
-		if (std::find_if(_addresses.begin(), _addresses.end(), SearchPairFunctor(it->getHost(), it->getPort())) == _addresses.end())
+		if (std::find_if(_addresses.begin(), _addresses.end(), SearchPairFunctor(it->second.getHost(), it->getPort())) == _addresses.end())
 		{
-			_addresses.push_back(std::make_pair(it->getHost(), it->getPort()));
+			_addresses.push_back(std::make_pair(it->second.getHost(), it->second.getPort()));
 		}
 	}
 	// std::cout << "addr " << _addresses.size() << std::endl;
@@ -33,9 +33,7 @@ void	ServerManager::handleNewConnections()
                     exit(EXIT_FAILURE);
                 }
                 std::cout << "New connection, socket fd is " << newSocket << ", ip is : " << inet_ntoa(_address.sin_addr) << ", port: " << ntohs(_address.sin_port) << std::endl;
-				_clients.push_back(Client(newSocket));
-				//_clientSockets.push_back(newSocket);
-                // message_queues[newSocket] = "";
+				_clients.push_back(Client(newSocket, &_address, _addrlen));
             }
         }
 }
@@ -67,16 +65,9 @@ void	ServerManager::addServerSocketsToSet()
 	}
 }
 
-// void    ServerManager::processRequest(Client &client, const std::string& request)
-// {
-
-// }
-
 void	ServerManager::run()
 {
     _addrlen = sizeof(_address);
-
-    //std::map<int, std::string> message_queues;
 
 	setAddressesToListen();
 
@@ -147,34 +138,22 @@ void	ServerManager::run()
             _sd = client->getSd();
             if (FD_ISSET(_sd, &_readfds))
 			{
-                if (!client->readRequest())
-                    client = _clients.erase(client);
+                if (!client->processRequest(_servers))
+                    client = this->removeClient(client);
                 else
-                {
-                    client->findVirtualServer(_servers);
-                    client->buildResponse(_servers);
                     ++client;
-                }
             }
 			else if (FD_ISSET(_sd, &_writefds))
 			{
-				//SEND REQUEST TO CLIENT HERE
-                // if (!message_queues[_sd].empty())
-				// {
-                //     const std::string& msg = message_queues[_sd];
-                //     int sent_bytes = send(_sd, msg.c_str(), msg.size(), 0);
-                //     if (sent_bytes > 0)
-				// 	{
-                //         message_queues[_sd].erase(0, sent_bytes);
-                //     }
-                // }
-                ++client;
+                if (!client->sendRequest())
+                    client = this->removeClient(client);
+                else
+                    ++client;
             }
 			else if (FD_ISSET(_sd, &_exceptfds))
 			{
                 std::cerr << "Exception on socket " << _sd << std::endl;
-                close(_sd);
-                client = _clients.erase(client);
+                client = this->removeClient(client);
             }
         }
     }
@@ -185,4 +164,10 @@ void	ServerManager::run()
     }
 }
 
-ServerManager::ServerManager(std::vector<VirtualServer> servers): _servers(servers) {}
+std::vector<Client>::iterator ServerManager::removeClient(std::vector<Client>::iterator client)
+{
+    close(client->getSd());
+    return _clients.erase(client);
+}
+
+ServerManager::ServerManager(const std::multimap<std::string, VirtualServer>&servers): _servers(servers) {}

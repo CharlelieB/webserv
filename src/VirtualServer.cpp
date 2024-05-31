@@ -1,4 +1,78 @@
 #include "VirtualServer.hpp"
+#include <algorithm>
+#include "utils.hpp"
+
+std::string normalizePath(const std::string& path)
+{
+    std::string normalized;
+    std::istringstream stream(path);
+    std::string segment;
+    std::vector<std::string> segments;
+
+    // Diviser le chemin par '/'
+    while (std::getline(stream, segment, '/'))
+	{
+        if (!segment.empty()) {
+            segments.push_back(segment);
+        }
+    }
+
+    // Joindre les segments avec un seul '/'
+    for (std::vector<std::string>::const_iterator it = segments.begin(); it != segments.end(); ++it)
+	{
+        normalized += "/" + *it;
+    }
+
+    return normalized.empty() ? "/" : normalized;
+}
+
+Route *VirtualServer::findRoute(const std::string& requestPath) const
+{
+    std::string normalizedRequestPath = normalizePath(requestPath);
+    std::string bestMatch;
+    size_t bestMatchSegments = 0;
+
+    // Calculer le nombre de segments dans le chemin de requête
+    size_t requestPathSegments = std::count(normalizedRequestPath.begin(), normalizedRequestPath.end(), '/') + 1;
+
+    // Itérer à travers la map pour trouver un chemin correspondant au chemin de requête normalisé
+    for (std::unordered_map<std::string, Route>::const_iterator it = _routes.begin(); it != _routes.end(); ++it) 
+	{
+        std::string normalizedRoutePath = normalizePath(it->first);
+
+        // Calculer le nombre de segments dans le chemin de la route
+        size_t routePathSegments = std::count(normalizedRoutePath.begin(), normalizedRoutePath.end(), '/') + 1;
+
+        // Ignorer les chemins plus longs que le chemin de requête
+        if (routePathSegments > requestPathSegments)
+            continue;
+
+        // Vérifier combien de segments correspondent au début du chemin normalisé
+        std::istringstream requestStream(normalizedRequestPath);
+        std::istringstream routeStream(normalizedRoutePath);
+        std::string requestSegment, routeSegment;
+        size_t matchSegments = 0;
+
+        while (std::getline(requestStream, requestSegment, '/') && std::getline(routeStream, routeSegment, '/'))
+		{
+            if (requestSegment == routeSegment) 
+                ++matchSegments;
+            else 
+                break;
+        }
+
+        // Mettre à jour la meilleure correspondance si la correspondance actuelle est plus fidèle et n'a pas de segments supplémentaires
+        if (matchSegments > bestMatchSegments && matchSegments == routePathSegments)
+		{
+            bestMatch = it->first;
+            bestMatchSegments = matchSegments;
+        }
+    }
+
+    if (!bestMatch.empty())
+		_routes.find(bestMatch);
+	return NULL;
+}
 
 void VirtualServer::setHost(const std::string& host)
 {
@@ -35,6 +109,11 @@ void VirtualServer::setRoutes(const std::string& key, const Route& route)
 	this->_routes[key] = route;
 }
 
+void VirtualServer::setIpPort()
+{
+	_ipPort = _host + ":" + Utils::nbToStr(_port);
+}
+
 //Getters
 
 int VirtualServer::getPort() const
@@ -45,6 +124,11 @@ int VirtualServer::getPort() const
 std::string VirtualServer::getHost() const
 {
 	return this->_host;
+}
+
+std::string VirtualServer::getIpPort() const
+{
+	return this->_ipPort;
 }
 
 std::unordered_map<std::string, Route> VirtualServer::getRoutes() const
@@ -62,6 +146,11 @@ std::string VirtualServer::getErrorPage(int status) const
 		page = it->first;
 	
 	return page;
+}
+
+std::vector<std::string> VirtualServer::getServerNames() const
+{
+    return _serverNames;
 }
 
 //Constructor

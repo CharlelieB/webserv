@@ -27,5 +27,6 @@ class Route
 		std::string getLocation() const;
 		std::string	getIndex() const;
 		bool	getAutoIndex() const;
+		std::string getRoot() const;
 		bool	isMethodAllowed(Methods::eMethods method) const;
 };

@@ -50,6 +50,11 @@ bool	Route::getAutoIndex() const
 	return _autoIndex;
 }
 
+std::string Route::getRoot() const
+{
+	return _root;
+}
+
 bool	Route::isMethodAllowed(Methods::eMethods method) const
 {
 	std::map<Methods::eMethods, bool>::const_iterator it;
