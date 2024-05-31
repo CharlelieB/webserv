@@ -42,7 +42,8 @@ const VirtualServer*	Client::findVirtualServer(const std::multimap<std::string, 
 	for (; it != range.second; ++it)
 	{
 		port = Utils::nbToStr(it->second.getPort());
-		for (std::vector<std::string>::const_iterator serverName = it->second.getServerNames().begin(); serverName != it->second.getServerNames().end(); ++serverName)
+		const std::vector<std::string>& serverNames = it->second.getServerNames();
+		for (std::vector<std::string>::const_iterator serverName = serverNames.begin(); serverName != serverNames.end(); ++serverName)
 			if ((*serverName + ":" + port) == host)
 				return &it->second;
 	}
@@ -92,10 +93,11 @@ bool	Client::processRequest(const std::multimap<std::string, VirtualServer>& ser
 bool	Client::sendRequest()
 {
 	if (!_mustSend)
-		return;
+		return false;
 
-    const char *buffer = _response.getBody().c_str();
-    size_t length = _response.getBody().size();
+	std::string content = _response.getContent().c_str();
+    const char *buffer = content.c_str();
+    size_t length = content.size();
 
     size_t totalSent = 0;
     const char *ptr = buffer;
@@ -110,6 +112,7 @@ bool	Client::sendRequest()
 	//after sending
 	_mustSend = false;
 	_response.reset();
+	return true;
 }
 
 int Client::getSd() const { return _sd; }

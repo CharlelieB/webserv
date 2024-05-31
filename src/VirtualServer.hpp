@@ -3,7 +3,8 @@
 #include <map>
 #include <vector>
 #include <string>
-#include <unordered_map>
+#include <map>
+
 
 #include "Route.hpp"
 
@@ -18,7 +19,7 @@ class VirtualServer
 		int _port;
 		std::vector<std::string> _serverNames;
 		//std::vector<Route> _routes; //must change to u map with location as key
-		std::unordered_map<std::string, Route> _routes;
+		std::map<std::string, Route> _routes;
 	public:
 		VirtualServer();
 		void setHost(const std::string& host);
@@ -33,7 +34,7 @@ class VirtualServer
 		int getPort() const;
 		std::string getHost() const;
 		std::string getIpPort() const;
-		std::unordered_map<std::string, Route> getRoutes() const;
+		std::map<std::string, Route> getRoutes() const;
 		std::string	getErrorPage(int status) const;
 		std::vector<std::string> getServerNames() const;
 

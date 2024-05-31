@@ -9,7 +9,7 @@ void	ServerManager::setAddressesToListen()
 {
 	for (std::multimap<std::string, VirtualServer>::const_iterator it = _servers.begin(); it != _servers.end(); ++it)
 	{
-		if (std::find_if(_addresses.begin(), _addresses.end(), SearchPairFunctor(it->second.getHost(), it->getPort())) == _addresses.end())
+		if (std::find_if(_addresses.begin(), _addresses.end(), SearchPairFunctor(it->second.getHost(), it->second.getPort())) == _addresses.end())
 		{
 			_addresses.push_back(std::make_pair(it->second.getHost(), it->second.getPort()));
 		}

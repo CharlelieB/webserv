@@ -1,11 +1,13 @@
 #pragma once
 
 #include <string>
+#include "VirtualServer.hpp"
+#include "Route.hpp"
 
 class Response
 {
 	public:
-		static std::unordered_map<int, std::string> statusMessage; 
+		static const std::map<int, std::string> _statusMessage;
 		Response();
 		void	build(const VirtualServer& server, const Request &request);
 		void	generateHeader();
@@ -18,7 +20,8 @@ class Response
 		void 	addIndex(const std::string &indexFile);
 		void 	rootPath(const std::string &root, const std::string &baseUrl);
 		void	reset();
-		const	 std::string& getBody() const;
+		std::string getContent() const;
+		static const std::map<int, std::string>& getStatusMessage();
 	private:
 		int _statusCode;
 		std::string _header;
@@ -27,4 +30,6 @@ class Response
 		std::string _ressourcePath;
 		bool	_pathIsDir;
 		Route *_route;
+
+		static std::map<int, std::string> createStatusMessageMap();
 };

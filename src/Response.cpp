@@ -9,19 +9,26 @@
 #include "Request.hpp"
 #include "VirtualServer.hpp"
 
-
-const std::unordered_map<int, std::string> statusMessage =
+std::map<int, std::string> Response::createStatusMessageMap()
 {
-	{200, "OK"},
-	{301, "Moved Permanently"},
-	{400, "Bad Request"},
-	{404, "Not Found"},
-	{405, "Method Not Allowed"},
-	{411, "Length Required"},
-	{413, "Request Entity Too Large"}, //for client_max_body_size
-	{500, "Internal Server Error"},
-	{505, "HTTP Version Not Supported"}
-};
+    std::map<int, std::string> m;
+    m[200] = "OK";
+    m[301] = "Moved Permanently";
+    m[400] = "Bad Request";
+    m[404] = "Not Found";
+    m[405] = "Method Not Allowed";
+    m[411] = "Length Required";
+    m[413] = "Request Entity Too Large";  // for client_max_body_size
+    m[500] = "Internal Server Error";
+    m[505] = "HTTP Version Not Supported";
+    return m;
+}
+
+const std::map<int, std::string>& Response::getStatusMessage()
+{
+    static const std::map<int, std::string> statusMessage = createStatusMessageMap();
+    return statusMessage;
+}
 
 void	Response::addIndex(const std::string &indexFile)
 {
@@ -89,7 +96,7 @@ bool	Response::checkFile(const std::string& path)
 
 void Response::getRessource()
 {
-	std::ifstream file(_ressourcePath, std::ios_base::in);
+	std::ifstream file(_ressourcePath.c_str(), std::ios_base::in);
 
 	if (!file.is_open())
 	{
@@ -106,17 +113,17 @@ void Response::getRessource()
 	_contentLength = _body.size();
 }
 
-void Response::postRessource(const std::string& path)
-{
-	//what to do if file already exists? (409 Conflict?)
-	//what to do if path is a folder?
-}
+// void Response::postRessource(const std::string& path)
+// {
+// 	//what to do if file already exists? (409 Conflict?)
+// 	//what to do if path is a folder?
+// }
 
 void	Response::generateHeader()
 {
 	std::ostringstream os;
 	
-	os << "HTTP/1.1 " << _statusCode << " " << statusMessage.find(_statusCode)->second << "\r\n"
+	os << "HTTP/1.1 " << _statusCode << " " << getStatusMessage().at(_statusCode) << "\r\n"
 		<< "content-length:" << _body.size() << "\r\n";
 	_header = os.str();
 }
@@ -136,24 +143,17 @@ void	Response::handleGet()
 	getRessource();
 }
 
-void	Response::checkLocationRules()
-{
-	if (!checkFile(_ressourcePath))
-	{
-		_statusCode = 404;
-		return;
-	}
-	if (!_route->isMethodAllowed(request.getMethod())))
-	{
-		_statusCode = 405;
-		return;
-	}
-}
+// void	Response::checkLocationRules()
+// {
+// 	if (!_route->isMethodAllowed(request.getMethod())))
+// 	{
+// 		_statusCode = 405;
+// 		return;
+// 	}
+// }
 
 void	Response::build(const VirtualServer& server, const Request &request)
 {
-	bool routeFound = false;
-
 	_statusCode = request.getStatus();
 	_ressourcePath = request.getUrl();
 	_route = server.findRoute(_ressourcePath);
@@ -161,10 +161,13 @@ void	Response::build(const VirtualServer& server, const Request &request)
 	if (_route)
 	{
 		rootPath(_route->getRoot(), _route->getLocation());
-		checkLocationRules();
+		//checkLocationRules();
 	}
 	else
 		rootPath("/www", "/");
+
+	if (!checkFile(_ressourcePath))
+		_statusCode = 404;
 
 	if (_statusCode == 200)
 	{
@@ -185,7 +188,6 @@ void	Response::build(const VirtualServer& server, const Request &request)
 			getRessource(); //here we'll get a problem cause we don't want 404 status if error page is not found
 
 	}
-
 	generateHeader();
 }
 
@@ -199,6 +201,6 @@ void	Response::reset()
 	_route = NULL; 
 }
 
-const std::string& Response::getBody() const { return _body; }	
+std::string Response::getContent() const { return _header + _body; }
 
 Response::Response(): _contentLength(0), _pathIsDir(false), _route(NULL) {}

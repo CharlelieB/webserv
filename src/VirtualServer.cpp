@@ -36,7 +36,7 @@ Route *VirtualServer::findRoute(const std::string& requestPath) const
     size_t requestPathSegments = std::count(normalizedRequestPath.begin(), normalizedRequestPath.end(), '/') + 1;
 
     // Itérer à travers la map pour trouver un chemin correspondant au chemin de requête normalisé
-    for (std::unordered_map<std::string, Route>::const_iterator it = _routes.begin(); it != _routes.end(); ++it) 
+    for (std::map<std::string, Route>::const_iterator it = _routes.begin(); it != _routes.end(); ++it) 
 	{
         std::string normalizedRoutePath = normalizePath(it->first);
 
@@ -131,7 +131,7 @@ std::string VirtualServer::getIpPort() const
 	return this->_ipPort;
 }
 
-std::unordered_map<std::string, Route> VirtualServer::getRoutes() const
+std::map<std::string, Route> VirtualServer::getRoutes() const
 {
 	return _routes;
 }

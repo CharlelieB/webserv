@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <cstdlib>
+#include "utils.hpp"
 
 std::string Request::normalizePath(const std::string &path)
 {
@@ -117,8 +118,8 @@ bool    Request::parseHeaders(const std::string& line)
     size_t colonPos = line.find(':');
     if (colonPos != std::string::npos)
     {
-        std::string key = line.substr(0, colonPos);
-        std::string value = line.substr(colonPos + 1);
+        std::string key = Utils::convertToLowercase(line.substr(0, colonPos));
+        std::string value = Utils::convertToLowercase(line.substr(colonPos + 1));
         _headers[key] = value;
     }
     else
@@ -131,7 +132,7 @@ bool    Request::parseHeaders(const std::string& line)
 
 void Request::parseBody(const std::istringstream& raw)
 {
-    std::map<std::string, std::string>::const_iterator it = _headers.find("Content-length");
+    std::map<std::string, std::string>::const_iterator it = _headers.find("content-length");
 
     //Content length is required to post a body
     if (it == _headers.end())
@@ -144,7 +145,7 @@ void Request::parseBody(const std::istringstream& raw)
     int contentLen = parseBodyLength(it->second);
 
     //if no Host field, bad request
-    it = _headers.find("Host");
+    it = _headers.find("host");
 
     if (it == _headers.end())
     {
@@ -225,4 +226,4 @@ Methods::eMethods Request::getMethod() const { return _method; }
 
 std::string	Request::getUrl() const { return _url; }
 
-Request::Request(): _status(200), _state(PARSING_REQUEST) {}
+Request::Request(): _state(PARSING_REQUEST), _status(200) {}

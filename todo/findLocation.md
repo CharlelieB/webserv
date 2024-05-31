@@ -5,7 +5,7 @@ Une fonction findRoot qui permet de matcher un path de block location (du fichie
 # Input
 
 ```C++
-std::string findLocation(std::unordered_map<std::string, Route> route, const std::string& requestPath); 
+std::string findLocation(std::map<std::string, Route> route, const std::string& requestPath); 
 ```
 
 # Valeur de retour
