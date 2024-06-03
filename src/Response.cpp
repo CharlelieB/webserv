@@ -98,6 +98,7 @@ void Response::getRessource()
 {
 	std::ifstream file(_ressourcePath.c_str(), std::ios_base::in);
 
+	std::cout << _ressourcePath << "-----------------" << std::endl;
 	if (!file.is_open())
 	{
 		_statusCode = 500;
@@ -124,21 +125,21 @@ void	Response::generateHeader()
 	std::ostringstream os;
 	
 	os << "HTTP/1.1 " << _statusCode << " " << getStatusMessage().at(_statusCode) << "\r\n"
-		<< "content-length:" << _body.size() << "\r\n";
+		<< "content-length:" << _body.size() << "\r\n\r\n";
 	_header = os.str();
 }
 
 void	Response::handleGet()
 {
-	if (_pathIsDir)
+	if (_route && _pathIsDir)
 	{
 		std::string index = _route->getIndex();
 		if (!index.empty())
 			addIndex(index);
 		else if (_route->getAutoIndex())
 			buildDirectoryListing();
-		else
-			return;
+		// else
+		// 	return;
 	}
 	getRessource();
 }
@@ -164,7 +165,7 @@ void	Response::build(const VirtualServer& server, const Request &request)
 		//checkLocationRules();
 	}
 	else
-		rootPath("/www", "/");
+		rootPath("www", "/");
 
 	if (!checkFile(_ressourcePath))
 		_statusCode = 404;

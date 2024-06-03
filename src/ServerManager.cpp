@@ -14,10 +14,16 @@ void	ServerManager::setAddressesToListen()
 			_addresses.push_back(std::make_pair(it->second.getHost(), it->second.getPort()));
 		}
 	}
-	// std::cout << "addr " << _addresses.size() << std::endl;
-	// for (std::vector<std::pair<std::string, int> >::const_iterator it = _addresses.begin(); it != _addresses.end(); ++it)
-	// 	std::cout << it->first << "  " << it->second << std::endl;
-	
+
+    //remove addr that listen to same port than *:port (to avoid trying to bind them twice)
+	for (std::vector<std::pair<std::string, int> >::iterator addr = _addresses.begin(); addr != _addresses.end();)
+    {
+		if (addr->first != "0.0.0.0" && std::find_if(_addresses.begin(), _addresses.end(), SearchPairFunctor("0.0.0.0", addr->second)) != _addresses.end())
+            addr = _addresses.erase(addr);
+        else
+            ++addr;
+		//std::cout << addr->first << "  " << addr->second << std::endl;
+    }
 }
 
 void	ServerManager::handleNewConnections()
@@ -146,7 +152,7 @@ void	ServerManager::run()
             }
 			else if (FD_ISSET(_sd, &_writefds))
 			{
-                if (!client->sendRequest())
+                if (!client->sendResponse())
                     client = this->removeClient(client);
                 else
                     ++client;
@@ -156,6 +162,8 @@ void	ServerManager::run()
                 std::cerr << "Exception on socket " << _sd << std::endl;
                 client = this->removeClient(client);
             }
+            else
+                ++client;
         }
     }
 

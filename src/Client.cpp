@@ -9,8 +9,18 @@
 
 const VirtualServer*	Client::findVirtualServer(const std::multimap<std::string, VirtualServer>& servers, const Request& req) const
 {
-	//because of parsing we are sure there is a Host field
-	std::string host = req.getHeaders().find("Host")->second;
+	//problem here, request could be a bad request with no host. Which vs do we chose?
+	
+	std::map<std::string, std::string> hosts = req.getHeaders();
+
+	std::map<std::string, std::string>::iterator hostField = hosts.find("host");
+
+	if (hostField == hosts.end())
+	{
+		std::cout << "host not found--------------------------------------" << std::endl;
+		return NULL;
+	}
+	std::string host = hostField->second;
 
 	//add default port to host header if no port
 	if (host.find(":") == std::string::npos)
@@ -69,12 +79,13 @@ bool	Client::readRequest()
 	this->_request.setRawData(s);
 	this->_request.parse();
 
+	std::cout << this->_request.getStatus() << " status ==================" << std::endl;
 	return true;
 }
 
 bool	Client::processRequest(const std::multimap<std::string, VirtualServer>& servers)
 {
-	if (readRequest())
+	if (!readRequest())
 		return false;
 
 	const VirtualServer *server = findVirtualServer(servers, _request);
@@ -90,10 +101,10 @@ bool	Client::processRequest(const std::multimap<std::string, VirtualServer>& ser
 	return true;
 }
 
-bool	Client::sendRequest()
+bool	Client::sendResponse()
 {
 	if (!_mustSend)
-		return false;
+		return true;
 
 	std::string content = _response.getContent().c_str();
     const char *buffer = content.c_str();
@@ -102,8 +113,10 @@ bool	Client::sendRequest()
     size_t totalSent = 0;
     const char *ptr = buffer;
 
+	std::cout << buffer << std::endl;
     while (totalSent < length)
 	{
+	std::cout << "SEND_-----------------------------------------------" << std::endl;
         ssize_t bytesSent = send(_sd, ptr + totalSent, length - totalSent, 0);
         if (bytesSent < 0)
             return false;

@@ -19,3 +19,9 @@ Task
 Change conf parsing and data structure so ServerManager use a multimap for virtual servers instead of vector
 Change setAddressesToListen() : iterate multimap instead
 Think about remove virtualServer block that have wrong addresses? 
+
+
+Challenge
+
+make sure we don't root to a directory with a / at the begginning
+handle non 200 status if host is not found (bad request): how to chose a virtual server?

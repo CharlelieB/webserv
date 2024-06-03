@@ -82,23 +82,25 @@ bool    Request::parseMethods(const std::string& method)
 
 bool    Request::parseRequestLine(const std::string& line)
 {
-    std::vector<std::string> requestLine = split(line, ' ');
+    std::string requestLine = trim(line);
 
-    if (requestLine.size() != 3)
+    std::vector<std::string> requestLineVec = split(requestLine, ' ');
+
+    if (requestLineVec.size() != 3)
     {
         _status = 400;
         return false;
     }
 
-    if (!parseMethods(requestLine[0]))
+    if (!parseMethods(requestLineVec[0]))
     {
         _status = 405;
         return false;
     }
 
-    _url = normalizePath(requestLine[1]);
+    _url = normalizePath(requestLineVec[1]);
     
-    if (requestLine[2] != "HTTP/1.1")
+    if (requestLineVec[2] != "HTTP/1.1")
     {
         _status = 505;
         return false;
@@ -132,8 +134,24 @@ bool    Request::parseHeaders(const std::string& line)
 
 void Request::parseBody(const std::istringstream& raw)
 {
-    std::map<std::string, std::string>::const_iterator it = _headers.find("content-length");
+    //if no host field, bad request
+    std::map<std::string, std::string>::const_iterator it = _headers.find("host");
 
+    if (it == _headers.end())
+    {
+        _status = 400;
+        _state = PARSING_COMPLETE;
+        return ;
+    }
+
+    //no body
+    if (raw.eof())
+    {
+        _state = PARSING_COMPLETE;
+        return ;
+    }
+
+    it = _headers.find("content-length");
     //Content length is required to post a body
     if (it == _headers.end())
     {
@@ -143,16 +161,6 @@ void Request::parseBody(const std::istringstream& raw)
     }
 
     int contentLen = parseBodyLength(it->second);
-
-    //if no Host field, bad request
-    it = _headers.find("host");
-
-    if (it == _headers.end())
-    {
-        _status = 400;
-        _state = PARSING_COMPLETE;
-        return ;
-    }
 
     if (contentLen == -1)
     {
