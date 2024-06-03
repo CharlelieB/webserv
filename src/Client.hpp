@@ -24,7 +24,7 @@ class Client
 		bool	readRequest();
 		bool	sendResponse();
 
-		const VirtualServer*	findVirtualServer(const std::multimap<std::string, VirtualServer>& servers, const Request& req) const;
+		VirtualServer*	findVirtualServer(const std::multimap<std::string, VirtualServer>& servers, const Request& req);
 	private:
 		Client();
 		int	_sd;

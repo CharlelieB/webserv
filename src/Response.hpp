@@ -21,6 +21,7 @@ class Response
 		void 	rootPath(const std::string &root, const std::string &baseUrl);
 		void	reset();
 		std::string getContent() const;
+		void 	readCustomErrorPage(const std::string& path);
 		static const std::map<int, std::string>& getStatusMessage();
 	private:
 		int _statusCode;

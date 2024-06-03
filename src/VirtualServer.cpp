@@ -1,6 +1,7 @@
 #include "VirtualServer.hpp"
 #include <algorithm>
 #include "utils.hpp"
+#include <iostream>
 
 std::string normalizePath(const std::string& path)
 {
@@ -39,7 +40,7 @@ Route *VirtualServer::findRoute(const std::string& requestPath) const
     for (std::map<std::string, Route>::const_iterator it = _routes.begin(); it != _routes.end(); ++it) 
 	{
         std::string normalizedRoutePath = normalizePath(it->first);
-
+        std::cout << "noramlized path " << normalizedRoutePath << std::endl;
         // Calculer le nombre de segments dans le chemin de la route
         size_t routePathSegments = std::count(normalizedRoutePath.begin(), normalizedRoutePath.end(), '/') + 1;
 
@@ -70,7 +71,7 @@ Route *VirtualServer::findRoute(const std::string& requestPath) const
     }
 
     if (!bestMatch.empty())
-		_routes.find(bestMatch);
+		return &_routes.find(bestMatch)->second;
 	return NULL;
 }
 
@@ -143,7 +144,7 @@ std::string VirtualServer::getErrorPage(int status) const
 	std::map<int, std::string>::const_iterator it = _errorPages.find(status);
 	
 	if (it != _errorPages.end())
-		page = it->first;
+		page = it->second;
 	
 	return page;
 }

@@ -8,32 +8,30 @@
 #include "Client.hpp"
 
 const VirtualServer*	Client::findVirtualServer(const std::multimap<std::string, VirtualServer>& servers, const Request& req) const
-{
-	//problem here, request could be a bad request with no host. Which vs do we chose?
-	
+{	
 	std::map<std::string, std::string> hosts = req.getHeaders();
-
 	std::map<std::string, std::string>::iterator hostField = hosts.find("host");
 
+	std::string host;
+	//in case host field is missing, we provide an empty host to not match any server_name
 	if (hostField == hosts.end())
-	{
-		std::cout << "host not found--------------------------------------" << std::endl;
-		return NULL;
-	}
-	std::string host = hostField->second;
+		host = "";
+	else
+		host = hostField->second;
 
-	//add default port to host header if no port
-	if (host.find(":") == std::string::npos)
+	if (!host.empty() && host.find(":") == std::string::npos) //add default port to host header if no port
 		host += ":80";
 
-    std::pair<std::multimap<std::string, VirtualServer>::const_iterator, std::multimap<std::string, VirtualServer>::const_iterator> range;
-    range = servers.equal_range(_host);
+    std::string portStr = Utils::nbToStr(_port);
+    
+	std::pair<std::multimap<std::string, VirtualServer>::const_iterator, std::multimap<std::string, VirtualServer>::const_iterator> range;
+
+    range = servers.equal_range(_host + ":" + portStr);
 
 	if (range.first == range.second)
 	{
 		//search for a port matching with all addresses (*:port match)
 
-    	std::string portStr = Utils::nbToStr(_port);
  
 		range = servers.equal_range("0.0.0.0:" + portStr);
 		if (range.first == range.second)
@@ -79,7 +77,6 @@ bool	Client::readRequest()
 	this->_request.setRawData(s);
 	this->_request.parse();
 
-	std::cout << this->_request.getStatus() << " status ==================" << std::endl;
 	return true;
 }
 
@@ -117,6 +114,7 @@ bool	Client::sendResponse()
     while (totalSent < length)
 	{
 	std::cout << "SEND_-----------------------------------------------" << std::endl;
+	//std::cout << buffer << std::endl;
         ssize_t bytesSent = send(_sd, ptr + totalSent, length - totalSent, 0);
         if (bytesSent < 0)
             return false;
@@ -144,6 +142,6 @@ Client::Client(int sd, struct sockaddr_in* address, int addrlen): _sd(sd), _must
 	#ifdef DEBUG_CLIENT
 		getpeername(_sd, (struct sockaddr*)_address, (socklen_t*)&_addrlen);
 		std::cout << "Client connected - " << inet_ntoa(_address->sin_addr) << ":" << ntohs(_address->sin_port);
-		std::cout << " on server" << _host << ":" << port << std::endl;
+		std::cout << " on server" << _host << ":" << _port << std::endl;
 	#endif
 }

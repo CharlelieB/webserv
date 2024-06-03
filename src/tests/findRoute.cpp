@@ -90,12 +90,13 @@ int main()
     routes["/home"] = Route();
     routes["/about"] = Route();
     routes["/contact"] = Route();
-    routes["/dossier/"] = Route();
+    // routes["/dossier/"] = Route();
     routes["/dossier/dossier2g/"] = Route();
     routes["/dossier//dossier2/aa"] = Route();
     routes["/dossier/dossier2//filge"] = Route();
     routes["/dossier/dossier2/file/aa"] = Route();
     routes["pouic"] = Route();
+    routes["/dossier"] = Route();
 
     std::string requestPath = "/dossier/dossier2/file";
     std::string result = findMostFaithfulPath(routes, requestPath);
@@ -122,6 +123,10 @@ int main()
     std::cout << result << std::endl;
 
     requestPath = "/kapouet/pouic/toto/pouet";
+    result = findMostFaithfulPath(routes, requestPath);
+    std::cout << result << std::endl;
+
+    requestPath = "/dossier";
     result = findMostFaithfulPath(routes, requestPath);
     std::cout << result << std::endl;
 

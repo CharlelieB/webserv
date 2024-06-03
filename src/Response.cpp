@@ -114,6 +114,24 @@ void Response::getRessource()
 	_contentLength = _body.size();
 }
 
+void Response::readCustomErrorPage(const std::string& path)
+{
+	std::ifstream file(path.c_str(), std::ios_base::in);
+
+	if (!file.is_open())
+	{
+		std::cerr << "Error opening custom error page: " << path << std::endl;
+		return;
+	}
+
+	std::stringstream buffer;
+    buffer << file.rdbuf();
+	_body = buffer.str();
+
+	file.close();
+	_contentLength = _body.size();
+}
+
 // void Response::postRessource(const std::string& path)
 // {
 // 	//what to do if file already exists? (409 Conflict?)
@@ -125,7 +143,7 @@ void	Response::generateHeader()
 	std::ostringstream os;
 	
 	os << "HTTP/1.1 " << _statusCode << " " << getStatusMessage().at(_statusCode) << "\r\n"
-		<< "content-length:" << _body.size() << "\r\n\r\n";
+		<< "server:Webserv\r\n" << "content-length:" << _body.size() << "\r\n\r\n";
 	_header = os.str();
 }
 
@@ -159,9 +177,11 @@ void	Response::build(const VirtualServer& server, const Request &request)
 	_ressourcePath = request.getUrl();
 	_route = server.findRoute(_ressourcePath);
 
+		std::cout << "yes_---------------- " << _ressourcePath << std::endl;
 	if (_route)
 	{
 		rootPath(_route->getRoot(), _route->getLocation());
+		std::cout << "yes_---------------- " << _ressourcePath << std::endl;
 		//checkLocationRules();
 	}
 	else
@@ -186,8 +206,7 @@ void	Response::build(const VirtualServer& server, const Request &request)
 		std::string errorPage = server.getErrorPage(_statusCode);
 
 		if (!errorPage.empty())
-			getRessource(); //here we'll get a problem cause we don't want 404 status if error page is not found
-
+			readCustomErrorPage("www/" + errorPage);
 	}
 	generateHeader();
 }
