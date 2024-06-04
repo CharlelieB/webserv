@@ -15,6 +15,7 @@ std::map<int, std::string> Response::createStatusMessageMap()
     m[200] = "OK";
     m[301] = "Moved Permanently";
     m[400] = "Bad Request";
+	m[403] = "Forbidden";
     m[404] = "Not Found";
     m[405] = "Method Not Allowed";
     m[411] = "Length Required";
@@ -69,12 +70,12 @@ void	Response::buildDirectoryListing()
 	{
 		while ((ent = readdir (dir)) != NULL)
 		{
-			element.append("<li><a href=\"" + std::string(ent->d_name) + "\"/></li>");
+			element.append("<li><a href=\"" + _ressourcePath + std::string(ent->d_name) + "\"/>" + std::string(ent->d_name) + "</li>");
 		}
 		closedir (dir);
 	}
 	else
-	{
+	{	
 		return perror ("Could not open directory to display directory listing");
 	}
 
@@ -82,7 +83,7 @@ void	Response::buildDirectoryListing()
 	_body = h1 + list;
 }
 
-bool	Response::checkFile(const std::string& path)
+bool	Response::ressourceExists(const std::string& path)
 {
 	struct stat buffer;
 	bool	fileExists;
@@ -91,6 +92,7 @@ bool	Response::checkFile(const std::string& path)
 
 	if (fileExists)
   		_pathIsDir = S_ISDIR(buffer.st_mode);
+	std::cout << "request file : " << path << " found " << fileExists << std::endl;
 	return fileExists;
 }
 
@@ -149,19 +151,48 @@ void	Response::generateHeader()
 
 void	Response::handleGet()
 {
-	if (_route && _pathIsDir)
-	{
-		std::string index = _route->getIndex();
-		if (!index.empty())
-			addIndex(index);
-		else if (_route->getAutoIndex())
-			buildDirectoryListing();
-		// else
-		// 	return;
-	}
 	getRessource();
 }
 
+void	Response::setupRoute(const Route& route)
+{
+	rootPath("." + route.getRoot(), route.getLocation());
+	if (!ressourceExists(_ressourcePath))
+	{
+		_statusCode = 404;
+		return ;
+	}
+	if (_pathIsDir)
+	{
+		std::string index = route.getIndex();
+		if (!index.empty())
+		{
+			addIndex(index);
+			if (!ressourceExists(_ressourcePath))
+			{
+				_statusCode = 404;
+				return ;
+			}
+			_pathIsDir = false; //index found, not a directory path anymore
+		}
+	}
+}
+
+void Response::manageRouting(const Route* route)
+{
+	if (route)
+	{
+		setupRoute(*route);
+		std::cout << "yes_---------------- " << _ressourcePath << std::endl;
+		//checkLocationRules();
+	}
+	else
+	{
+		rootPath("www", "/");
+		if (!ressourceExists(_ressourcePath))
+			_statusCode = 404;
+	}
+}
 // void	Response::checkLocationRules()
 // {
 // 	if (!_route->isMethodAllowed(request.getMethod())))
@@ -171,34 +202,40 @@ void	Response::handleGet()
 // 	}
 // }
 
+void Response::handleRequestByMethod(const Route *route, const Request &request)
+{
+	if (request.getMethod() == Methods::GET)
+	{
+		if (_pathIsDir)
+		{
+			if (route && route->getAutoIndex())
+				buildDirectoryListing();
+			else
+				_statusCode = 403;
+		}
+		else
+			handleGet();
+	}
+	else if (request.getMethod() == Methods::POST)
+	{
+		//look if rights are ok and create a file then write the content in it, ensure to respect max_body_size of conf
+	}
+}
+
 void	Response::build(const VirtualServer& server, const Request &request)
 {
 	_statusCode = request.getStatus();
 	_ressourcePath = request.getUrl();
-	_route = server.findRoute(_ressourcePath);
+
+	const Route *route = server.findRoute(_ressourcePath);
 
 		std::cout << "yes_---------------- " << _ressourcePath << std::endl;
-	if (_route)
-	{
-		rootPath(_route->getRoot(), _route->getLocation());
-		std::cout << "yes_---------------- " << _ressourcePath << std::endl;
-		//checkLocationRules();
-	}
-	else
-		rootPath("www", "/");
 
-	if (!checkFile(_ressourcePath))
-		_statusCode = 404;
+	manageRouting(route);
 
 	if (_statusCode == 200)
 	{
-		if (request.getMethod() == Methods::GET)
-			handleGet();
-		else if (request.getMethod() == Methods::POST)
-		{
-			//look if rights are ok and create a file then write the content in it, ensure to respect max_body_size of conf
-
-		}
+		handleRequestByMethod(route, request);
 	}
 
 	if (_statusCode != 200)
@@ -218,9 +255,8 @@ void	Response::reset()
 	_ressourcePath.clear();
 	_contentLength = 0;
 	_pathIsDir = false;
-	_route = NULL; 
 }
 
 std::string Response::getContent() const { return _header + _body; }
 
-Response::Response(): _contentLength(0), _pathIsDir(false), _route(NULL) {}
+Response::Response(): _contentLength(0), _pathIsDir(false) {}

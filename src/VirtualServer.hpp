@@ -38,5 +38,5 @@ class VirtualServer
 		std::string	getErrorPage(int status) const;
 		std::vector<std::string> getServerNames() const;
 
-		Route *findRoute(const std::string& requestPath) const;
+		const Route *findRoute(const std::string& requestPath) const;
 };

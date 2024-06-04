@@ -14,8 +14,10 @@ class Response
 		void	getRessource();
 		void	postRessource();
 		void	buildDirectoryListing();
-		bool	checkFile(const std::string& path);
+		bool	ressourceExists(const std::string& path);
 		void	handleGet();
+		void	setupRoute(const Route& route);
+		void	manageRouting(const Route* route);
 		void	checkLocationRules();
 		void 	addIndex(const std::string &indexFile);
 		void 	rootPath(const std::string &root, const std::string &baseUrl);
@@ -23,6 +25,7 @@ class Response
 		std::string getContent() const;
 		void 	readCustomErrorPage(const std::string& path);
 		static const std::map<int, std::string>& getStatusMessage();
+		void	handleRequestByMethod(const Route* route, const Request &request);
 	private:
 		int _statusCode;
 		std::string _header;
@@ -30,7 +33,7 @@ class Response
 		size_t _contentLength;
 		std::string _ressourcePath;
 		bool	_pathIsDir;
-		Route *_route;
+		//Route *_route;
 
 		static std::map<int, std::string> createStatusMessageMap();
 };

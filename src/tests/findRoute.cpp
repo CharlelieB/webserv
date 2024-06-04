@@ -96,7 +96,7 @@ int main()
     routes["/dossier/dossier2//filge"] = Route();
     routes["/dossier/dossier2/file/aa"] = Route();
     routes["pouic"] = Route();
-    routes["/dossier"] = Route();
+    routes["/website"] = Route();
 
     std::string requestPath = "/dossier/dossier2/file";
     std::string result = findMostFaithfulPath(routes, requestPath);
@@ -126,7 +126,7 @@ int main()
     result = findMostFaithfulPath(routes, requestPath);
     std::cout << result << std::endl;
 
-    requestPath = "/dossier";
+    requestPath = "/website/html/app.html";
     result = findMostFaithfulPath(routes, requestPath);
     std::cout << result << std::endl;
 

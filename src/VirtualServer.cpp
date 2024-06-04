@@ -27,7 +27,7 @@ std::string normalizePath(const std::string& path)
     return normalized.empty() ? "/" : normalized;
 }
 
-Route *VirtualServer::findRoute(const std::string& requestPath) const
+const Route *VirtualServer::findRoute(const std::string& requestPath) const
 {
     std::string normalizedRequestPath = normalizePath(requestPath);
     std::string bestMatch;
