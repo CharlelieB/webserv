@@ -17,8 +17,7 @@ class Response
 		bool	ressourceExists(const std::string& path);
 		void	handleGet();
 		void	setupRoute(const Route& route);
-		void	manageRouting(const Route* route);
-		void	checkLocationRules();
+		void	manageRouting(const Route* route, const Request &request);
 		void 	addIndex(const std::string &indexFile);
 		void 	rootPath(const std::string &root);
 		void	reset();
@@ -27,6 +26,7 @@ class Response
 		static const std::map<int, std::string>& getStatusMessage();
 		void	handleRequestByMethod(const Route* route, const Request &request);
 		bool	isDirectory(const std::string& str);
+		void	checkLocationRules(const Route& route);
 		void normalizePath();
 	private:
 		int _statusCode;

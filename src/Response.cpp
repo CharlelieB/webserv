@@ -182,11 +182,6 @@ bool	Response::isDirectory(const std::string& str)
 void	Response::setupRoute(const Route& route)
 {
 	rootPath(route.getRoot());
-	// if (!ressourceExists(_ressourcePath))
-	// {
-	// 	_statusCode = 404;
-	// 	return ;
-	// }
 
 	_pathIsDir = isDirectory(_ressourcePath);
 
@@ -196,23 +191,22 @@ void	Response::setupRoute(const Route& route)
 		if (!index.empty())
 		{
 			addIndex(index);
-			// if (!ressourceExists(_ressourcePath))
-			// {
-			// 	_statusCode = 404;
-			// 	return ;
-			// }
 			_pathIsDir = false; //index found, not a directory path anymore
 		}
 	}
 }
 
-void Response::manageRouting(const Route* route)
+void Response::manageRouting(const Route* route, const Request &request)
 {
 	if (route)
 	{
+		if (!route->isMethodAllowed(request.getMethod()))
+		{
+			_statusCode = 405;
+			return;
+		}
 		setupRoute(*route);
 		std::cout << "yes_---------------- " << _ressourcePath << std::endl;
-		//checkLocationRules();
 	}
 	else
 	{
@@ -222,16 +216,8 @@ void Response::manageRouting(const Route* route)
 	normalizePath();
 
 	if (!ressourceExists(_ressourcePath))
-			_statusCode = 404;
+		_statusCode = 404;
 }
-// void	Response::checkLocationRules()
-// {
-// 	if (!_route->isMethodAllowed(request.getMethod())))
-// 	{
-// 		_statusCode = 405;
-// 		return;
-// 	}
-// }
 
 void Response::handleRequestByMethod(const Route *route, const Request &request)
 {
@@ -262,7 +248,7 @@ void	Response::build(const VirtualServer& server, const Request &request)
 
 		std::cout << "yes_---------------- " << _ressourcePath << std::endl;
 
-	manageRouting(route);
+	manageRouting(route, request);
 
 	if (_statusCode == 200)
 	{
