@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-std::string rootPath(const std::string &root, const std::string &url, const std::string &baseUrl)
+std::string alias(const std::string &root, const std::string &url, const std::string &baseUrl)
 {
     std::string baseUrlWithSlash = baseUrl;
     if (baseUrlWithSlash[baseUrlWithSlash.size() - 1] != '/')
@@ -22,12 +22,19 @@ std::string rootPath(const std::string &root, const std::string &url, const std:
     return fullPath;
 }
 
+std::string rootPath(const std::string &root, const std::string &url)
+{
+    std::string fullPath = root + url;
+
+    return fullPath;
+}
+
 int main() {
-    std::string root = "/tmp/www";
-    std::string baseUrl = "/kapouet/pouic/";
+    std::string root = "/tmp/www/";
+    //std::string baseUrl = "/kapouet/pouic/";
     std::string url = "/kapouet/pouic/toto/pouet";
 
-    std::string rootedPath = rootPath(root, url, baseUrl);
+    std::string rootedPath = rootPath(root, url);
     std::cout << "Rooted path: " << rootedPath << std::endl;
 
     return 0;

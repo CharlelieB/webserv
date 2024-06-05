@@ -28,8 +28,6 @@ class Request
 		void	parseBody(const std::istringstream& raw);
 		int		parseBodyLength(const std::string& str);
 
-		std::string normalizePath(const std::string &path);
-
 		std::map<std::string, std::string> getHeaders() const;
 
 		void	addHeader(const std::string& key, const std::string& value);

@@ -6,39 +6,6 @@
 #include <cstdlib>
 #include "utils.hpp"
 
-std::string Request::normalizePath(const std::string &path)
-{
-    std::vector<std::string> parts;
-    std::stringstream ss(path);
-    std::string part;
-    
-    while (std::getline(ss, part, '/'))
-	{
-        if (part == "" || part == ".")
-            continue;
-		else if (part == "..")
-		{
-            if (!parts.empty())
-                parts.pop_back();
-        }
-		else
-            parts.push_back(part);
-    }
-
-    std::string normalizedPath = "/";
-    for (size_t i = 0; i < parts.size(); ++i)
-    {
-        normalizedPath += parts[i];
-        if (i != parts.size() - 1)
-            normalizedPath += "/";
-    }
-
-    if (!path.empty() && normalizedPath != "/" && path[path.size() - 1] == '/')
-        normalizedPath += "/";
-
-    return normalizedPath;
-}
-
 int Request::parseBodyLength(const std::string& str)
 {
     char* p;
@@ -100,7 +67,7 @@ bool    Request::parseRequestLine(const std::string& line)
         return false;
     }
 
-    _url = normalizePath(requestLineVec[1]);
+    _url = requestLineVec[1];
     
     if (requestLineVec[2] != "HTTP/1.1")
     {

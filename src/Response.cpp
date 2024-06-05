@@ -25,6 +25,39 @@ std::map<int, std::string> Response::createStatusMessageMap()
     return m;
 }
 
+void Response::normalizePath()
+{
+    std::vector<std::string> parts;
+    std::stringstream ss(_ressourcePath);
+    std::string part;
+    
+    while (std::getline(ss, part, '/'))
+	{
+        if (part == "" || part == ".")
+            continue;
+		else if (part == "..")
+		{
+            if (!parts.empty())
+                parts.pop_back();
+        }
+		else
+            parts.push_back(part);
+    }
+
+    std::string normalizedPath = "/";
+    for (size_t i = 0; i < parts.size(); ++i)
+    {
+        normalizedPath += parts[i];
+        if (i != parts.size() - 1)
+            normalizedPath += "/";
+    }
+
+    if (!_ressourcePath.empty() && normalizedPath != "/" && _ressourcePath[_ressourcePath.size() - 1] == '/')
+        normalizedPath += "/";
+
+    _ressourcePath = "." + normalizedPath;
+}
+
 const std::map<int, std::string>& Response::getStatusMessage()
 {
     static const std::map<int, std::string> statusMessage = createStatusMessageMap();
@@ -37,26 +70,13 @@ void	Response::addIndex(const std::string &indexFile)
         _ressourcePath = _ressourcePath + indexFile;
 }
 
-void Response::rootPath(const std::string &root, const std::string &baseUrl)
+void Response::rootPath(const std::string &root)
 {
-    std::string baseUrlWithSlash = baseUrl;
-    if (baseUrlWithSlash[baseUrlWithSlash.size() - 1] != '/')
-        baseUrlWithSlash += "/";
-
-    std::string rootWithSlash = root;
-    if (rootWithSlash[rootWithSlash.size() - 1] != '/')
-        rootWithSlash += "/";
-
-    std::string relativeUrl;
-    if (_ressourcePath.find(baseUrlWithSlash) == 0)
-        relativeUrl = _ressourcePath.substr(baseUrlWithSlash.size());
-    else
-        relativeUrl = _ressourcePath.substr(baseUrl.size());
-
-    std::string fullPath = rootWithSlash + relativeUrl;
+    std::string fullPath = root + _ressourcePath;
 
     _ressourcePath = fullPath;
 }
+
 
 void	Response::buildDirectoryListing()
 {
@@ -70,7 +90,6 @@ void	Response::buildDirectoryListing()
 	{
 		while ((ent = readdir (dir)) != NULL)
 		{
-			//element.append("<li><a href=\"" + _ressourcePath + std::string(ent->d_name) + "\"/>" + std::string(ent->d_name) + "</li>");
 			element.append("<li><a href=\"" + std::string(ent->d_name) + "\"/>" + std::string(ent->d_name) + "</li>");
 		}
 		closedir (dir);
@@ -162,12 +181,12 @@ bool	Response::isDirectory(const std::string& str)
 
 void	Response::setupRoute(const Route& route)
 {
-	rootPath("." + route.getRoot(), route.getLocation());
-	if (!ressourceExists(_ressourcePath))
-	{
-		_statusCode = 404;
-		return ;
-	}
+	rootPath(route.getRoot());
+	// if (!ressourceExists(_ressourcePath))
+	// {
+	// 	_statusCode = 404;
+	// 	return ;
+	// }
 
 	_pathIsDir = isDirectory(_ressourcePath);
 
@@ -177,11 +196,11 @@ void	Response::setupRoute(const Route& route)
 		if (!index.empty())
 		{
 			addIndex(index);
-			if (!ressourceExists(_ressourcePath))
-			{
-				_statusCode = 404;
-				return ;
-			}
+			// if (!ressourceExists(_ressourcePath))
+			// {
+			// 	_statusCode = 404;
+			// 	return ;
+			// }
 			_pathIsDir = false; //index found, not a directory path anymore
 		}
 	}
@@ -197,10 +216,13 @@ void Response::manageRouting(const Route* route)
 	}
 	else
 	{
-		rootPath("www", "/");
-		if (!ressourceExists(_ressourcePath))
-			_statusCode = 404;
+		rootPath("www");
 	}
+
+	normalizePath();
+
+	if (!ressourceExists(_ressourcePath))
+			_statusCode = 404;
 }
 // void	Response::checkLocationRules()
 // {

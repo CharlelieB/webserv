@@ -20,13 +20,14 @@ class Response
 		void	manageRouting(const Route* route);
 		void	checkLocationRules();
 		void 	addIndex(const std::string &indexFile);
-		void 	rootPath(const std::string &root, const std::string &baseUrl);
+		void 	rootPath(const std::string &root);
 		void	reset();
 		std::string getContent() const;
 		void 	readCustomErrorPage(const std::string& path);
 		static const std::map<int, std::string>& getStatusMessage();
 		void	handleRequestByMethod(const Route* route, const Request &request);
 		bool	isDirectory(const std::string& str);
+		void normalizePath();
 	private:
 		int _statusCode;
 		std::string _header;
