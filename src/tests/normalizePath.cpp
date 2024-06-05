@@ -30,6 +30,10 @@ std::string normalizePath(const std::string &path)
             normalizedPath += "/";
         }
     }
+
+    if (!path.empty() && normalizedPath != "/" && path[path.size() - 1] == '/') {
+        normalizedPath += "/";
+    }
     
     return normalizedPath;
 }
@@ -39,6 +43,8 @@ int main()
     std::string testPaths[] = {
         "/usr/local/../bin/",
         "./",
+        "/",
+        "/usr/../../..",
         "/home/user//docs/./notes.txt",
         "/var/www/html//../../etc/passwd",
         "//srv//www/../htdocs/index.html"

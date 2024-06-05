@@ -20,4 +20,15 @@ namespace Utils
         	lowerStr[i] = std::tolower(str[i]);
 		return lowerStr;
 	}
+	
+	inline bool compareFirstNChar(const std::string& str1, const std::string& str2, size_t n)
+	{
+		size_t reqLen = str2.size();
+
+		if (reqLen < n)
+			return false;
+
+		return str1.compare(0, n, str2, 0, n) == 0;
+	}
+
 }

@@ -70,7 +70,8 @@ void	Response::buildDirectoryListing()
 	{
 		while ((ent = readdir (dir)) != NULL)
 		{
-			element.append("<li><a href=\"" + _ressourcePath + std::string(ent->d_name) + "\"/>" + std::string(ent->d_name) + "</li>");
+			//element.append("<li><a href=\"" + _ressourcePath + std::string(ent->d_name) + "\"/>" + std::string(ent->d_name) + "</li>");
+			element.append("<li><a href=\"" + std::string(ent->d_name) + "\"/>" + std::string(ent->d_name) + "</li>");
 		}
 		closedir (dir);
 	}
@@ -90,8 +91,8 @@ bool	Response::ressourceExists(const std::string& path)
 
 	fileExists = stat(path.c_str(), &buffer) == 0;
 
-	if (fileExists)
-  		_pathIsDir = S_ISDIR(buffer.st_mode);
+	// if (fileExists)
+  	// 	_pathIsDir = S_ISDIR(buffer.st_mode);
 	std::cout << "request file : " << path << " found " << fileExists << std::endl;
 	return fileExists;
 }
@@ -154,6 +155,11 @@ void	Response::handleGet()
 	getRessource();
 }
 
+bool	Response::isDirectory(const std::string& str)
+{
+	return str[str.size() - 1] == '/';
+}
+
 void	Response::setupRoute(const Route& route)
 {
 	rootPath("." + route.getRoot(), route.getLocation());
@@ -162,6 +168,9 @@ void	Response::setupRoute(const Route& route)
 		_statusCode = 404;
 		return ;
 	}
+
+	_pathIsDir = isDirectory(_ressourcePath);
+
 	if (_pathIsDir)
 	{
 		std::string index = route.getIndex();

@@ -26,6 +26,7 @@ class Response
 		void 	readCustomErrorPage(const std::string& path);
 		static const std::map<int, std::string>& getStatusMessage();
 		void	handleRequestByMethod(const Route* route, const Request &request);
+		bool	isDirectory(const std::string& str);
 	private:
 		int _statusCode;
 		std::string _header;

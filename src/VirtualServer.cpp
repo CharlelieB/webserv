@@ -3,76 +3,49 @@
 #include "utils.hpp"
 #include <iostream>
 
-std::string normalizePath(const std::string& path)
-{
-    std::string normalized;
-    std::istringstream stream(path);
-    std::string segment;
-    std::vector<std::string> segments;
+// std::string normalizePath(const std::string& path)
+// {
+//     std::string normalized;
+//     std::istringstream stream(path);
+//     std::string segment;
+//     std::vector<std::string> segments;
 
-    // Diviser le chemin par '/'
-    while (std::getline(stream, segment, '/'))
-	{
-        if (!segment.empty()) {
-            segments.push_back(segment);
-        }
-    }
+//     // Diviser le chemin par '/'
+//     while (std::getline(stream, segment, '/'))
+// 	{
+//         if (!segment.empty()) {
+//             segments.push_back(segment);
+//         }
+//     }
 
-    // Joindre les segments avec un seul '/'
-    for (std::vector<std::string>::const_iterator it = segments.begin(); it != segments.end(); ++it)
-	{
-        normalized += "/" + *it;
-    }
+//     // Joindre les segments avec un seul '/'
+//     for (std::vector<std::string>::const_iterator it = segments.begin(); it != segments.end(); ++it)
+// 	{
+//         normalized += "/" + *it;
+//     }
 
-    return normalized.empty() ? "/" : normalized;
-}
+//     return normalized.empty() ? "/" : normalized;
+// }
+
 
 const Route *VirtualServer::findRoute(const std::string& requestPath) const
 {
-    std::string normalizedRequestPath = normalizePath(requestPath);
-    std::string bestMatch;
-    size_t bestMatchSegments = 0;
+	std::string match;
+	std::string location;
+	size_t locationLen = 0;
+	size_t longest = 0;
 
-    // Calculer le nombre de segments dans le chemin de requête
-    size_t requestPathSegments = std::count(normalizedRequestPath.begin(), normalizedRequestPath.end(), '/') + 1;
-
-    // Itérer à travers la map pour trouver un chemin correspondant au chemin de requête normalisé
-    for (std::map<std::string, Route>::const_iterator it = _routes.begin(); it != _routes.end(); ++it) 
+	for (std::map<std::string, Route>::const_iterator it = _routes.begin(); it != _routes.end(); ++it)
 	{
-        std::string normalizedRoutePath = normalizePath(it->first);
-        std::cout << "noramlized path " << normalizedRoutePath << std::endl;
-        // Calculer le nombre de segments dans le chemin de la route
-        size_t routePathSegments = std::count(normalizedRoutePath.begin(), normalizedRoutePath.end(), '/') + 1;
-
-        // Ignorer les chemins plus longs que le chemin de requête
-        if (routePathSegments > requestPathSegments)
-            continue;
-
-        // Vérifier combien de segments correspondent au début du chemin normalisé
-        std::istringstream requestStream(normalizedRequestPath);
-        std::istringstream routeStream(normalizedRoutePath);
-        std::string requestSegment, routeSegment;
-        size_t matchSegments = 0;
-
-        while (std::getline(requestStream, requestSegment, '/') && std::getline(routeStream, routeSegment, '/'))
+		location = it->first;
+		locationLen = location.size();
+		if (Utils::compareFirstNChar(location, requestPath, locationLen) && longest < locationLen)
 		{
-            if (requestSegment == routeSegment) 
-                ++matchSegments;
-            else 
-                break;
-        }
-
-        // Mettre à jour la meilleure correspondance si la correspondance actuelle est plus fidèle et n'a pas de segments supplémentaires
-        if (matchSegments > bestMatchSegments && matchSegments == routePathSegments)
-		{
-            bestMatch = it->first;
-            bestMatchSegments = matchSegments;
-        }
-    }
-
-    if (!bestMatch.empty())
-		return &_routes.find(bestMatch)->second;
-	return NULL;
+			match = location;
+			longest = locationLen;
+		}
+	}
+	return match.empty() ? NULL : &_routes.find(match)->second; 
 }
 
 void VirtualServer::setHost(const std::string& host)

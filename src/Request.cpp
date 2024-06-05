@@ -14,9 +14,8 @@ std::string Request::normalizePath(const std::string &path)
     
     while (std::getline(ss, part, '/'))
 	{
-        if (part == "" || part == ".") {
+        if (part == "" || part == ".")
             continue;
-        }
 		else if (part == "..")
 		{
             if (!parts.empty())
@@ -27,13 +26,16 @@ std::string Request::normalizePath(const std::string &path)
     }
 
     std::string normalizedPath = "/";
-    for (size_t i = 0; i < parts.size(); ++i) {
+    for (size_t i = 0; i < parts.size(); ++i)
+    {
         normalizedPath += parts[i];
-        if (i != parts.size() - 1) {
+        if (i != parts.size() - 1)
             normalizedPath += "/";
-        }
     }
-    
+
+    if (!path.empty() && normalizedPath != "/" && path[path.size() - 1] == '/')
+        normalizedPath += "/";
+
     return normalizedPath;
 }
 
