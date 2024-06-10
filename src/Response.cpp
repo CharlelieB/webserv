@@ -8,6 +8,7 @@
 #include "Response.hpp"
 #include "Request.hpp"
 #include "VirtualServer.hpp"
+#include "errorPages.hpp"
 
 std::map<int, std::string> Response::createStatusMessageMap()
 {
@@ -261,6 +262,8 @@ void	Response::build(const VirtualServer& server, const Request &request)
 
 		if (!errorPage.empty())
 			readCustomErrorPage("www/" + errorPage);
+		else
+			_body = ErrorPages::getDefaultErrorPage(_statusCode, getStatusMessage().at(_statusCode));
 	}
 	generateHeader();
 }
