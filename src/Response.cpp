@@ -26,9 +26,34 @@ std::map<int, std::string> Response::createStatusMessageMap()
     return m;
 }
 
+
+
+// ------WebKitFormBoundary7MA4YWxkTrZu0gW
+// Content-Disposition: form-data; name="name"
+
+// John Doe
+// ------WebKitFormBoundary7MA4YWxkTrZu0gW
+// Content-Disposition: form-data; name="file"; filename="example.txt"
+// Content-Type: text/plain
+
+// (File content goes here, binary or text)
+// ------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+void parseMultipartForm(const std::string &body, const std::string &delimiter)
+{
+	std::stringstream ss(body);
+	std::string line;
+
+    while (std::getline(ss, line) && line != delimiter)
+	{
+
+	}
+
+}
+
 void Response::normalizePath()
 {
-    std::vector<std::string> parts;
+    std::vector<std::string> parts;	
     std::stringstream ss(_ressourcePath);
     std::string part;
     
