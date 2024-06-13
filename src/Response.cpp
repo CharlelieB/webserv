@@ -26,7 +26,57 @@ std::map<int, std::string> Response::createStatusMessageMap()
     return m;
 }
 
-
+std::map<std::string, std::string> Response::createContentTypeMap()
+{
+    std::map<std::string, std::string> m;
+	m["mp4"] = "video/mp4";
+	m["mp3"] = "audio/mpeg";
+	m["html"] = "text/html";
+	m["css"] = "text/css";
+	m["js"] = "application/javascript";
+	m["json"] = "application/json";
+	m["xml"] = "application/xml";
+	m["png"] = "image/png";
+	m["jpg"] = "image/jpeg";
+	m["jpeg"] = "image/jpeg";
+	m["gif"] = "image/gif";
+	m["webp"] = "image/webp";
+	m["svg"] = "image/svg+xml";
+	m["ico"] = "image/x-icon";
+	m["pdf"] = "application/pdf";
+	m["zip"] = "application/zip";
+	m["tar"] = "application/x-tar";
+	m["gz"] = "application/gzip";
+	m["txt"] = "text/plain";
+	m["csv"] = "text/csv";
+	m["mpg"] = "video/mpeg";
+	m["mpeg"] = "video/mpeg";
+	m["mov"] = "video/quicktime";
+	m["avi"] = "video/x-msvideo";
+	m["wav"] = "audio/wav";
+	m["ogg"] = "audio/ogg";
+	m["ogv"] = "video/ogg";
+	m["flac"] = "audio/flac";
+	m["bmp"] = "image/bmp";
+	m["tiff"] = "image/tiff";
+	m["tif"] = "image/tiff";
+	m["woff"] = "font/woff";
+	m["woff2"] = "font/woff2";
+	m["ttf"] = "font/ttf";
+	m["otf"] = "font/otf";
+	m["eot"] = "application/vnd.ms-fontobject";
+	m["7z"] = "application/x-7z-compressed";
+	m["epub"] = "application/epub+zip";
+	m["mobi"] = "application/x-mobipocket-ebook";
+	m["doc"] = "application/msword";
+	m["docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+	m["ppt"] = "application/vnd.ms-powerpoint";
+	m["pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+	m["xls"] = "application/vnd.ms-excel";
+	m["xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+	m["rtf"] = "application/rtf";
+    return m;
+}
 
 // ------WebKitFormBoundary7MA4YWxkTrZu0gW
 // Content-Disposition: form-data; name="name"
@@ -39,17 +89,17 @@ std::map<int, std::string> Response::createStatusMessageMap()
 // (File content goes here, binary or text)
 // ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-void parseMultipartForm(const std::string &body, const std::string &delimiter)
-{
-	std::stringstream ss(body);
-	std::string line;
+// void parseMultipartForm(const std::string &body, const std::string &delimiter)
+// {
+// 	std::stringstream ss(body);
+// 	std::string line;
 
-    while (std::getline(ss, line) && line != delimiter)
-	{
+//     while (std::getline(ss, line) && line != delimiter)
+// 	{
 
-	}
+// 	}
 
-}
+// }
 
 void Response::normalizePath()
 {
@@ -87,6 +137,12 @@ void Response::normalizePath()
 const std::map<int, std::string>& Response::getStatusMessage()
 {
     static const std::map<int, std::string> statusMessage = createStatusMessageMap();
+    return statusMessage;
+}
+
+const std::map<std::string, std::string>& Response::getContentType()
+{
+    static const std::map<std::string, std::string> statusMessage = createContentTypeMap();
     return statusMessage;
 }
 
@@ -157,9 +213,10 @@ void Response::getRessource()
 	std::stringstream buffer;
     buffer << file.rdbuf();
 	_body = buffer.str();
-
 	file.close();
+
 	_contentLength = _body.size();
+	std::cout << " -------------content-len------------" << _contentLength << std::endl;
 }
 
 void Response::readCustomErrorPage(const std::string& path)
@@ -191,12 +248,13 @@ void	Response::generateHeader()
 	std::ostringstream os;
 	
 	os << "HTTP/1.1 " << _statusCode << " " << getStatusMessage().at(_statusCode) << "\r\n"
-		<< "server:Webserv\r\n" << "content-length:" << _body.size() << "\r\n\r\n";
+		<< "server: Webserv\r\n" << "content-length: " << _body.size() << "\r\n" << "content-type:" << _contentType << "\r\n\r\n";
 	_header = os.str();
 }
 
 void	Response::handleGet()
 {
+	setContentType();
 	getRessource();
 }
 
@@ -209,8 +267,6 @@ void	Response::setupRoute(const Route& route)
 {
 	rootPath(route.getRoot());
 
-	_pathIsDir = isDirectory(_ressourcePath);
-
 	if (_pathIsDir)
 	{
 		std::string index = route.getIndex();
@@ -222,8 +278,33 @@ void	Response::setupRoute(const Route& route)
 	}
 }
 
+void Response::setContentType()
+{
+	if (!_pathIsDir)
+	{
+		size_t pos = _ressourcePath.find_last_of('.');
+
+		if (pos != std::string::npos)
+		{
+			try
+			{
+				_contentType = getContentType().at(_ressourcePath.substr(pos + 1));
+			}
+			catch (const std::out_of_range& oor)
+			{
+				//_contentType = "application/octet-stream";
+				_contentType = "";
+			}
+		}
+		else
+			_contentType = "";
+			//_contentType = "application/octet-stream";
+	}
+}
+
 void Response::manageRouting(const Route* route, const Request &request)
 {
+	_pathIsDir = isDirectory(_ressourcePath);
 	if (route)
 	{
 		if (!route->isMethodAllowed(request.getMethod()))
@@ -288,7 +369,7 @@ void	Response::build(const VirtualServer& server, const Request &request)
 		if (!errorPage.empty())
 			readCustomErrorPage("www/" + errorPage);
 		else
-			_body = ErrorPages::getDefaultErrorPage(_statusCode, getStatusMessage().at(_statusCode));
+			_body = ErrorPages::getDefaultErrorPage(_statusCode, getStatusMessage().at(_statusCode)); //could be dangerous if map return map.end()
 	}
 	generateHeader();
 }
@@ -302,6 +383,8 @@ void	Response::reset()
 	_pathIsDir = false;
 }
 
-std::string Response::getContent() const { return _header + _body; }
+std::string Response::getContent() const {
+	return _header + _body;
+}
 
-Response::Response(): _contentLength(0), _pathIsDir(false) {}
+Response::Response(): _contentType("text/html"), _contentLength(0), _pathIsDir(false) {}

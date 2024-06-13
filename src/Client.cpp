@@ -103,22 +103,24 @@ bool	Client::sendResponse()
 	if (!_mustSend)
 		return true;
 
-	std::string content = _response.getContent().c_str();
+	std::string content = _response.getContent();
     const char *buffer = content.c_str();
     size_t length = content.size();
 
     size_t totalSent = 0;
     const char *ptr = buffer;
 
-	std::cout << buffer << std::endl;
+	//std::cout << buffer << std::endl;
+
     while (totalSent < length)
 	{
-	std::cout << "SEND_-----------------------------------------------" << std::endl;
-	//std::cout << buffer << std::endl;
+	//std::cout << "SEND_-----------------------------------------------" << std::endl;
         ssize_t bytesSent = send(_sd, ptr + totalSent, length - totalSent, 0);
         if (bytesSent < 0)
+		{
             return false;
-        totalSent += bytesSent;
+		}
+		totalSent += bytesSent;
     }
 	//after sending
 	_mustSend = false;
