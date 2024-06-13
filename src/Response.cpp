@@ -159,7 +159,6 @@ void Response::rootPath(const std::string &root)
     _ressourcePath = fullPath;
 }
 
-
 void	Response::buildDirectoryListing()
 {
 	std::string h1 = "<h1>Index of" + _ressourcePath + "</h1>";
@@ -292,13 +291,11 @@ void Response::setContentType()
 			}
 			catch (const std::out_of_range& oor)
 			{
-				//_contentType = "application/octet-stream";
-				_contentType = "";
+				_contentType = "application/octet-stream";
 			}
 		}
 		else
-			_contentType = "";
-			//_contentType = "application/octet-stream";
+			_contentType = "application/octet-stream";
 	}
 }
 
@@ -313,7 +310,6 @@ void Response::manageRouting(const Route* route, const Request &request)
 			return;
 		}
 		setupRoute(*route);
-		std::cout << "yes_---------------- " << _ressourcePath << std::endl;
 	}
 	else
 	{
@@ -353,7 +349,7 @@ void	Response::build(const VirtualServer& server, const Request &request)
 
 	const Route *route = server.findRoute(_ressourcePath);
 
-		std::cout << "yes_---------------- " << _ressourcePath << std::endl;
+std::cout << "DEBUG - Request path : " << _ressourcePath << std::endl;
 
 	manageRouting(route, request);
 
@@ -383,7 +379,8 @@ void	Response::reset()
 	_pathIsDir = false;
 }
 
-std::string Response::getContent() const {
+std::string Response::getContent() const
+{
 	return _header + _body;
 }
 
