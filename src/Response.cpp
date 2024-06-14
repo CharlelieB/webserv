@@ -197,6 +197,11 @@ bool	Response::ressourceExists(const std::string& path)
 	return fileExists;
 }
 
+// void Response::sendBody()
+// {
+
+// }
+
 void Response::getRessource()
 {
 	std::ifstream file(_ressourcePath.c_str(), std::ios_base::in);
