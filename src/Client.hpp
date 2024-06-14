@@ -5,13 +5,12 @@
 #include "Request.hpp"
 #include "Response.hpp"
 #include "VirtualServer.hpp"
+#include "const.hpp"
 
 // #define DEBUG_CLIENT
 
 class Client
-{
-	#define BUFFER_SIZE 8000
-	
+{	
 	public:
 		Client(int sd, struct sockaddr_in* address, int addrlen);
 		
@@ -29,7 +28,7 @@ class Client
 		Client();
 		int	_sd;
 		bool	_mustSend;
-		char	_buffer[BUFFER_SIZE];
+		char	_buffer[ConstVar::bufferSize];
 		std::string _host;
 		int _port;
 		Request _request;

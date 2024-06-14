@@ -215,7 +215,6 @@ void Response::getRessource()
 	file.close();
 
 	_contentLength = _body.size();
-	std::cout << " -------------content-len------------" << _contentLength << std::endl;
 }
 
 void Response::readCustomErrorPage(const std::string& path)
