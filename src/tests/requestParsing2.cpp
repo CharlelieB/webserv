@@ -15,6 +15,7 @@ std::vector<unsigned char> getLine(const std::vector<unsigned char>& buffer, siz
     }
     return line;
 }
+// GET /\r\n
 
 void parseHttpRequest(const std::vector<unsigned char>& buffer)
 {
@@ -22,24 +23,26 @@ void parseHttpRequest(const std::vector<unsigned char>& buffer)
 
     std::vector<unsigned char> requestLine = getLine(buffer, pos);
 
+    if (requestLine.empty())
+        return;
+
     size_t methodEnd = std::find(requestLine.begin(), requestLine.end(), ' ') - requestLine.begin();
+    if (methodEnd == requestLine.size())
+        return;
+
     size_t uriEnd = std::find(requestLine.begin() + methodEnd + 1, requestLine.end(), ' ') - requestLine.begin();
+    if (uriEnd == requestLine.size())
+        return;
 
-    std::vector<unsigned char> method(requestLine.begin(), requestLine.begin() + methodEnd);
-    std::vector<unsigned char> uri(requestLine.begin() + methodEnd + 1, requestLine.begin() + uriEnd);
-    std::vector<unsigned char> httpVersion(requestLine.begin() + uriEnd + 1, requestLine.end());
+    std::string method(requestLine.begin(), requestLine.begin() + methodEnd);
+    std::string uri(requestLine.begin() + methodEnd + 1, requestLine.begin() + uriEnd);
+    std::string httpVersion(requestLine.begin() + uriEnd + 1, requestLine.end());
 
-    std::cout << "Method: ";
-    std::cout.write(reinterpret_cast<char*>(method.data()), method.size());
-    std::cout << std::endl;
+    std::cout << "Method: " << method << std::endl;
 
-    std::cout << "URI: ";
-    std::cout.write(reinterpret_cast<char*>(uri.data()), uri.size());
-    std::cout << std::endl;
+    std::cout << "URI: " << uri << std::endl;
 
-    std::cout << "HTTP Version: ";
-    std::cout.write(reinterpret_cast<char*>(httpVersion.data()), httpVersion.size());
-    std::cout << std::endl;
+    std::cout << "HTTP Version: " << httpVersion << std::endl;
 
     // Parse headers
     std::map<std::string, std::string> headers;
@@ -62,21 +65,22 @@ void parseHttpRequest(const std::vector<unsigned char>& buffer)
     }
 
     // Parse body if Content-Length header exists
-    std::map<std::string, std::string>::const_iterator contentLengthIt = headers.find("Content-Length");
-    if (contentLengthIt != headers.end()) {
-        int contentLength = std::atoi(contentLengthIt->second.c_str());
-        if (pos + contentLength <= buffer.size()) {
-            std::vector<unsigned char> body(buffer.begin() + pos, buffer.begin() + pos + contentLength);
-            std::cout << "Body: ";
-            std::cout.write(reinterpret_cast<const char*>(body.data()), body.size());
-            std::cout << std::endl;
-        }
-    }
+    // std::map<std::string, std::string>::const_iterator contentLengthIt = headers.find("Content-Length");
+    // if (contentLengthIt != headers.end()) {
+    //     int contentLength = std::atoi(contentLengthIt->second.c_str());
+    //     if (pos + contentLength <= buffer.size()) {
+    //         std::vector<unsigned char> body(buffer.begin() + pos, buffer.begin() + pos + contentLength);
+    //         std::cout << "Body: ";
+    //         std::cout.write(reinterpret_cast<const char*>(body.data()), body.size());
+    //         std::cout << std::endl;
+    //     }
+    // }
 }
 
 int main()
 {
-    const char *request = "GET / HTTP/1.1\r\nHost: exampl.com\r\nContent-Length: 11\r\n\r\nHello world";
+    //const char *request = "GET / HTTP/1.1\r\nHost: exampl.com\r\nContent-Length: 11\r\n\r\nHello world";
+    const char *request = "GET / a\n";
 
     std::vector<unsigned char> buffer(request, request + strlen(request));
 

@@ -35,6 +35,7 @@ class Response
 		std::string _header;
 		std::string _body;
 		std::string _contentType;
+		std::string _dirListingBody;
 		size_t _contentLength;
 		std::string _ressourcePath;
 		bool	_pathIsDir;

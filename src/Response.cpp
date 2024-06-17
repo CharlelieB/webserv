@@ -181,6 +181,7 @@ void	Response::buildDirectoryListing()
 	}
 
 	list = "<ul>" + element + "</ul>";
+	_dirListingBody = h1 + list; 
 	_body = h1 + list;
 }
 
