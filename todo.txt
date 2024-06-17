@@ -25,3 +25,8 @@ Challenge
 
 make sure we don't root to a directory with a / at the begginning
 handle non 200 status if host is not found (bad request): how to chose a virtual server?
+
+
+Note
+
+I realize localhost:8080/folder and this localhost:8080/folder/ are not the same. The slash is used at the end to know if it's a folder or not

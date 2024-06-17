@@ -62,7 +62,7 @@ const VirtualServer*	Client::findVirtualServer(const std::multimap<std::string, 
 
 bool	Client::readRequest()
 {
-	int bytesRead = recv(_sd, _buffer, ConstVar::bufferSize, 0);
+	ssize_t bytesRead = recv(_sd, _buffer, ConstVar::bufferSize, 0);
 
 	if (bytesRead <= 0)
 	    return false;
