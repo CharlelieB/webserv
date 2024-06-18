@@ -389,4 +389,8 @@ std::string Response::getContent() const
 	return _header + _body;
 }
 
+std::string Response::getPath() const { return _ressourcePath; }
+
+int Response::getStatus() const { return _statusCode ; }
+
 Response::Response(): _contentType("text/html"), _contentLength(0), _pathIsDir(false) {}

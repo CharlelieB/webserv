@@ -20,22 +20,17 @@ class Client
 		void	setBuffer(const char *buffer);
 
 		bool	processRequest(const std::multimap<std::string, VirtualServer>& servers);
-        void    postRessource();
-        void    readHeader();
-        bool    serveFile();
+		bool	readRequest();
+		bool	sendResponse();
 
 		const VirtualServer*	findVirtualServer(const std::multimap<std::string, VirtualServer>& servers, const Request& req) const;
 	private:
 		Client();
 		int	_sd;
 		bool	_mustSend;
+		char	_buffer[ConstVar::bufferSize];
 		std::string _host;
 		int _port;
-		std::vector<unsigned char> _raw;
-		int _status;
-        
-		char _buffer[ConstVar::bufferSize + 1];
-        size_t _cursor;
 		Request _request;
 		Response _response;
 };

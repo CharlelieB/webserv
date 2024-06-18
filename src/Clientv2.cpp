@@ -2,47 +2,81 @@
 #include <map>
 #include <vector>
 #include <cstring>
+#include <fstream>
+#include <iostream>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
 #define BUFFER_SIZE 4096
-#include "Response.hpp"
 
-class Client
-{
-    public:
-		Client(int sd, struct sockaddr_in* address, int addrlen);
-        void    processRequest();
-        void    postRessource();
-        void    readHeader();
+#include "utils.hpp"
+#include "Client.hpp"
 
-		const VirtualServer*	findVirtualServer(const std::multimap<std::string, VirtualServer>& servers, const Request& req) const;
-    private:
-		Client();
-        int	_sd;
-		bool	_mustSend;
-        std::string _host;
-		int _port;
-        
-        struct Request
-        {
-            std::string _url;
-            std::string _method;
-            std::map<std::string, std::string> _headers;
-        };
+const VirtualServer*	Client::findVirtualServer(const std::multimap<std::string, VirtualServer>& servers, const Request& req) const
+{	
+	std::map<std::string, std::string> hosts = req.getHeaders();
+	std::map<std::string, std::string>::iterator hostField = hosts.find("host");
 
-        std::vector<unsigned char> _raw;
-        char _buffer[BUFFER_SIZE + 1];
-        size_t _cursor;
-        Request _request;
-        Response _response;
-};
+	std::string host;
+	//in case host field is missing, we provide an empty host to not match any server_name
+	if (hostField == hosts.end())
+		host = "";
+	else
+		host = hostField->second;
 
-void Client::serveFile()
-{
-    ssize_t bytesSent;
-    std::ifstream file(filePath, std::ios::binary);
+	if (!host.empty() && host.find(":") == std::string::npos) //add default port to host header if no port
+		host += ":80";
+
+    std::string portStr = Utils::nbToStr(_port);
     
-    if (!file.is_open()) {
-        std::cerr << "Failed to open the file: " << filePath << std::endl;
-        return;
+	std::pair<std::multimap<std::string, VirtualServer>::const_iterator, std::multimap<std::string, VirtualServer>::const_iterator> range;
+
+    range = servers.equal_range(_host + ":" + portStr);
+
+	if (range.first == range.second)
+	{
+		//search for a port matching with all addresses (*:port match)
+
+ 
+		range = servers.equal_range("0.0.0.0:" + portStr);
+		if (range.first == range.second)
+		{
+			//normally this case should not happen, because we setup our sockets based on the conf file
+			std::cerr << "no port match" << std::endl;
+            return NULL;
+		}
+	}
+
+	//filter by server_name (based on Host header field)
+	std::multimap<std::string, VirtualServer>::const_iterator it = range.first;
+	std::multimap<std::string, VirtualServer>::const_iterator begin = it;
+	std::string port;
+
+	for (; it != range.second; ++it)
+	{
+		port = Utils::nbToStr(it->second.getPort());
+		const std::vector<std::string>& serverNames = it->second.getServerNames();
+		for (std::vector<std::string>::const_iterator serverName = serverNames.begin(); serverName != serverNames.end(); ++serverName)
+			if ((*serverName + ":" + port) == host)
+				return &it->second;
+	}
+
+	//no match based on server_name, so return the first ip:port match
+    return &begin->second;
+}
+
+bool Client::serveFile()
+{
+    ssize_t bytesSent, totalSent;
+    std::ifstream file(_response.getPath(), std::ios::binary);
+
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open the file: " << _response.getPath() << std::endl;
+        _status = 500;
+        return true;
     }
 
     //std::vector<char> buffer(4096);
@@ -66,6 +100,7 @@ void Client::serveFile()
         }
     }
     file.close();
+    return true;
 }
 void handleGetRequest()
 {
@@ -111,14 +146,17 @@ void Client::readHeader()
 
 void Client::postRessource()
 {
-    //here we want to make sure the request has content-length header
-    if (noContentLen)
-        return false;
+    if (_request.getHeaders().find("content-length") == _request.getHeaders().end())
+    {
+        _status = 411;
+        return;        
+    }
 
     //open file
-    std::ofstream outFile(filename, std::ios::binary);
+    std::ofstream outFile(_response.getPath().c_str(), std::ios::binary);
 
-    if (!outFile.is_open()) {
+    if (!outFile.is_open())
+    {
         std::cerr << "Failed to open the file!" << std::endl;
         return 1;
     }
@@ -150,17 +188,39 @@ void Client::postRessource()
     outFile.close();
 }
 
-void Client::processRequest()
+bool Client::processRequest(const std::multimap<std::string, VirtualServer>& servers)
 {
     readHeader();
 
     std::vector<unsigned char> raw(_buffer, _buffer + std::strlen(_buffer));
 
-    parse(); //in parsing we must check if we found the /r/n empty line (if no, request header too large)
+    _request.parse(raw); //in parsing we must check if we found the /r/n empty line (if no, request header too large)
 
-    _response.build(_request);
-    if (_request._method == "GET")
-        handleGetRequest();
+	const VirtualServer *server = findVirtualServer(servers, _request);
+
+	if (!server)
+	{
+		std::cerr << "something really bad happened (virtual server not found)" << std::endl;
+		return false;
+	}
+
+	_response.build(*server, _request);
+	_request.reset();
+	_mustSend = true;
+
+    _status = _response.getStatus();
+
+    if (_status == 200)
+    {
+        if (_request.getMethod() == Methods::GET)
+            if (!serveFile())
+                return false;
+        else if (_request.getMethod() == Methods::POST)
+            postRessource();
+    }
+    if (_status != 200)
+        //handleErrorPage();
+    return true;
 }
 //A request line cannot exceed the size of one buffer, or the 414
 // (Request-URI Too Large) error is returned to the client. A request header

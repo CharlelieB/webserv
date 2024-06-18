@@ -21,15 +21,19 @@ class Response
 		void 	addIndex(const std::string &indexFile);
 		void 	rootPath(const std::string &root);
 		void	reset();
+
 		std::string getContent() const;
+		std::string getPath() const;
+		int			getStatus() const;
+
 		void 	readCustomErrorPage(const std::string& path);
 		static const std::map<int, std::string>& getStatusMessage();
 		static const std::map<std::string, std::string>& getContentType();
 		void	handleRequestByMethod(const Route* route, const Request &request);
 		bool	isDirectory(const std::string& str);
 		void	checkLocationRules(const Route& route);
-		void normalizePath();
-		void setContentType();
+		void 	normalizePath();
+		void	setContentType();
 	private:
 		int _statusCode;
 		std::string _header;

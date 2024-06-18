@@ -3,8 +3,21 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 #include <cstdlib>
 #include "utils.hpp"
+
+std::vector<unsigned char> Request::getLine()
+{
+    std::vector<unsigned char> line;
+    size_t endPos = std::find(_buffer.begin() + _pos, _buffer.end(), '\r') - _buffer.begin();
+    if (endPos != _buffer.size() && endPos + 1 < _buffer.size() && _buffer[endPos + 1] == '\n')
+	{
+        line.insert(line.end(), _buffer.begin() + _pos, _buffer.begin() + endPos);
+        _pos = endPos + 2; // Skip \r\n
+    }
+    return line;
+}
 
 int Request::parseBodyLength(const std::string& str)
 {
@@ -14,26 +27,6 @@ int Request::parseBodyLength(const std::string& str)
     if (*p)
         return -1;
     return n;
-}
-
-std::string trim(const std::string &str)
-{
-    size_t first = str.find_first_not_of(" \t\r\n");
-    size_t last = str.find_last_not_of(" \t\r\n");
-    return (first == std::string::npos || last == std::string::npos) ? "" : str.substr(first, last - first + 1);
-}
-
-std::vector<std::string> split(const std::string &str, char delimiter)
-{
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(str);
-
-    while (std::getline(tokenStream, token, delimiter))
-	{
-        tokens.push_back(token);
-    }
-    return tokens;
 }
 
 bool    Request::parseMethods(const std::string& method)
@@ -49,59 +42,80 @@ bool    Request::parseMethods(const std::string& method)
     return true;
 }
 
-bool    Request::parseRequestLine(const std::string& line)
+bool    Request::parseRequestLine()
 {
-    std::string requestLine = trim(line);
+	std::vector<unsigned char> requestLine = getLine();
 
-    std::vector<std::string> requestLineVec = split(requestLine, ' ');
-
-    if (requestLineVec.size() != 3)
-    {
-        _status = 400;
+    if (requestLine.empty())
+	{
+		_status = 400;
         return false;
-    }
+	}
 
-    if (!parseMethods(requestLineVec[0]))
+    size_t methodEnd = std::find(requestLine.begin(), requestLine.end(), ' ') - requestLine.begin();
+    
+	if (methodEnd == requestLine.size())
+    {	
+		_status = 400;
+		return false;
+	}
+
+    size_t uriEnd = std::find(requestLine.begin() + methodEnd + 1, requestLine.end(), ' ') - requestLine.begin();
+    if (uriEnd == requestLine.size())
+	{
+		_status = 400;
+        return false;
+	}
+
+    std::string method(requestLine.begin(), requestLine.begin() + methodEnd);
+    std::string uri(requestLine.begin() + methodEnd + 1, requestLine.begin() + uriEnd);
+    std::string httpVersion(requestLine.begin() + uriEnd + 1, requestLine.end());
+
+    if (!parseMethods(method))
     {
         _status = 405;
         return false;
     }
 
-    _url = requestLineVec[1];
+    _url = uri;
     
-    if (requestLineVec[2] != "HTTP/1.1")
+    if (httpVersion != "HTTP/1.1")
     {
         _status = 505;
         return false;
     }
-    this->_state = PARSING_HEADERS;
-
     return true;
 }
 
-bool    Request::parseHeaders(const std::string& line)
+bool    Request::parseHeaders()
 {
-    if (line == "\r")
-    {
-        this->_state = PARSING_BODY;
-        return false;
-    }
-    size_t colonPos = line.find(':');
-    if (colonPos != std::string::npos)
-    {
-        std::string key = Utils::convertToLowercase(line.substr(0, colonPos));
-        std::string value = Utils::convertToLowercase(line.substr(colonPos + 1));
-        _headers[key] = value;
-    }
-    else
-    {
-        _status = 400;
-        return false;
+	std::map<std::string, std::string> headers;
+    while (_pos < _buffer.size())
+	{
+        std::vector<unsigned char> headerLine = getLine();
+        if (headerLine.empty())
+		{
+        	return true;
+        }
+        size_t colonPos = std::find(headerLine.begin(), headerLine.end(), ':') - headerLine.begin();
+        if (colonPos != headerLine.size())
+		{
+            std::string headerName(headerLine.begin(), headerLine.begin() + colonPos);
+            std::string headerValue(headerLine.begin() + colonPos + 2, headerLine.end()); // skip ": "
+            headerName = Utils::convertToLowercase(headerName);
+            headerValue = Utils::convertToLowercase(headerValue);
+			_headers[headerName] = headerValue;
+        }
+		else
+		{
+        	_status = 400;
+        	return false;
+		}
     }
     return true;
 }
 
-void Request::parseBody(const std::istringstream& raw)
+bool Request::checkRequiredHeaderField()
 {
     //if no host field, bad request
     std::map<std::string, std::string>::const_iterator it = _headers.find("host");
@@ -109,93 +123,58 @@ void Request::parseBody(const std::istringstream& raw)
     if (it == _headers.end())
     {
         _status = 400;
-        _state = PARSING_COMPLETE;
-        return ;
+        return false;
     }
 
-    //no body
-    if (raw.eof())
-    {
-        _state = PARSING_COMPLETE;
-        return ;
-    }
+	if (_method == Methods::POST)
+	{
+		it = _headers.find("content-length");
 
-    it = _headers.find("content-length");
-    //Content length is required to post a body
-    if (it == _headers.end())
-    {
-        _status = 411;
-        _state = PARSING_COMPLETE;
-        return ;
-    }
+		//Content length is required to post a body
+		if (it == _headers.end())
+		{
+			_status = 411;
+			return false;
+		}
 
-    int contentLen = parseBodyLength(it->second);
+		int contentLen = parseBodyLength(it->second);
 
-    if (contentLen == -1)
-    {
-        _status = 400;
-        _state = PARSING_COMPLETE;
-        return ;
-    }
-
-    _body = raw.str();
-
-    if (_body.size() != static_cast<unsigned int>(contentLen))
-    {
-        _status = 400;
-        _state = PARSING_COMPLETE;
-        return ;
-    }
-    std::cout << _body << std::endl;
+		if (contentLen == -1)
+		{
+			_status = 400;
+			return false;
+		}
+	}
+    // if (_body.size() != static_cast<unsigned int>(contentLen))
+    // {
+    //     _status = 400;
+    //     _state = PARSING_COMPLETE;
+    //     return ;
+    // }
 }
 
-void Request::parse()
+void Request::parse(const std::vector<unsigned char>& buffer)
 {
-    std::istringstream raw(_rawData);
-    std::string line;
+    _buffer = buffer;
 
-    while (std::getline(raw, line))
-    {
-        if (_state != PARSING_BODY && line[line.size() - 1] != '\r')
-        {
-            _status = 400;
-            return ;
-        }
-
-        switch(_state)
-        {
-            case PARSING_REQUEST:
-                if (!parseRequestLine(line))
-                    return ;
-                break;
-            case PARSING_HEADERS:
-                if (!parseHeaders(line))
-                    return ;
-                break;
-            case PARSING_BODY:
-                parseBody(raw);
-                break;
-            case PARSING_COMPLETE:
-                return ;
-        }
-    }
+   if (!parseRequestLine())
+	return;
+   if (!parseHeaders() || !checkRequiredHeaderField())
+	return;
 }
 
 void    Request::reset()
 {
     _status = 200;
-    _state = PARSING_REQUEST;
-	_rawData.clear();
 	_url.clear();
 	_headers.clear();
-	_body.clear();
+    _buffer.clear();
+    _pos = 0;
 }
 
 std::map<std::string, std::string> Request::getHeaders() const { return _headers; }
 
 void	Request::addHeader(const std::string& key, const std::string& value) { _headers[key] = value; }
-
-void	Request::setRawData(const std::string& data) { _rawData = data; }
 
 int Request::getStatus() const { return _status; }
 
@@ -203,4 +182,4 @@ Methods::eMethods Request::getMethod() const { return _method; }
 
 std::string	Request::getUrl() const { return _url; }
 
-Request::Request(): _state(PARSING_REQUEST), _status(200) {}
+Request::Request(): _status(200), _pos(0) {}

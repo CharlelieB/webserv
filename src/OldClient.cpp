@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "utils.hpp"
-#include "Client.hpp"
+#include "OldClient.hpp"
 
 const VirtualServer*	Client::findVirtualServer(const std::multimap<std::string, VirtualServer>& servers, const Request& req) const
 {	
