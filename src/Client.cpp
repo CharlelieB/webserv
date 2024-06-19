@@ -123,26 +123,29 @@ void Client::readHeader()
         bytesLeft = toRead - totalBytesRead;
 
         bytesRead = recv(_sd, _buffer + totalBytesRead, bytesLeft, 0);
+        std::cout << "read " << bytesRead << std::endl;
 
         if (bytesRead < 0)
         {
+            std::cout << "bad recv" << std::endl;
             //check macro (two are fine other are error)
         }
         else if (bytesRead == 0)
         {
             // No more data (connection closed)
-            if (totalBytesRead == 0)
-            {
-                //connection closed
-            }
+            // if (totalBytesRead == 0)
+            // {
+            //     //connection closed
+            // }
             //here must save the fact that we read everything
             _noDataLeft = true;
             break;
         }
-
         totalBytesRead += bytesRead;
     }
+        std::cout << "test " << totalBytesRead << std::endl;
     _buffer[totalBytesRead] = '\0';
+    std::cout << _buffer << std::endl;
 }
 
 void Client::postRessource()
