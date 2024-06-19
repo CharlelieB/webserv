@@ -194,7 +194,7 @@ bool	Response::ressourceExists(const std::string& path)
 
 	// if (fileExists)
   	// 	_pathIsDir = S_ISDIR(buffer.st_mode);
-	fileSize = buffer.st_size;
+	_fileSize = buffer.st_size;
 	std::cout << "request file : " << path << " found " << fileExists << std::endl;
 	return fileExists;
 }

@@ -166,13 +166,14 @@ void Client::postRessource()
     std::size_t bytesToWrite = _raw.size() - _cursor;
 
     //we write the body we got from the first recv
-    outFile.write(_raw.data() + _cursor, bytesToWrite);
+    const unsigned char *c_str = _raw.data();
+    outFile.write(reinterpret_cast<const char*>(c_str + _cursor), bytesToWrite);
 
     if (!_noDataLeft)
     {
-        ssize_t totalRead, bytesRead;
+        ssize_t totalRead = 0, bytesRead = 0;
         
-        size_t bodyLen = Utils::strToNb(*(_request.getHeaders().find("content-length")));
+        size_t bodyLen = Utils::strToNb(_request.getHeaders().find("content-length")->second);
         char* buffer = new char[bodyLen + 1];
         for (;;)
         {
@@ -182,8 +183,8 @@ void Client::postRessource()
                 //check macro (two are fine other are error)
             if (bytesRead == 0)
             {
-                if (totalRead == 0)
-                    //connection closed
+                // if (totalRead == 0)
+                //     //connection closed
                 //close fd, remove client, communication is done
                 break;
             }
@@ -203,13 +204,18 @@ bool Client::sendResponse()
     if (_status == 200)
     {
         if (_request.getMethod() == Methods::GET)
+        {
             if (!serveFile())
                 return false;
+        }
         else if (_request.getMethod() == Methods::POST)
+        {
             postRessource();
+        }
     }
     // if (_status != 200)
     //     handleErrorPage();
+    return true;
 }
 
 bool Client::processRequest(const std::multimap<std::string, VirtualServer>& servers)
@@ -243,6 +249,12 @@ bool Client::processRequest(const std::multimap<std::string, VirtualServer>& ser
 // (Request-URI Too Large) error is returned to the client. A request header
 // field cannot exceed the size of one buffer as well, or the 400 (Bad Request)
 // error is returned to the client. Buffers are allocated only on demand.
+
+int Client::getSd() const { return _sd; }
+
+std::string Client::getHost() const { return _host; }
+
+int Client::getPort() const { return _port; }
 
 Client::Client(int sd, struct sockaddr_in* address, int addrlen): _sd(sd), _mustSend(false)
 {

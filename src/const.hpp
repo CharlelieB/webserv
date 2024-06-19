@@ -3,5 +3,5 @@
 
 namespace ConstVar
 {
-	static const size_t bufferSize = 4096;
+	static const ssize_t bufferSize = 4096;
 }
