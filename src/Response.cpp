@@ -194,6 +194,7 @@ bool	Response::ressourceExists(const std::string& path)
 
 	// if (fileExists)
   	// 	_pathIsDir = S_ISDIR(buffer.st_mode);
+	fileSize = buffer.st_size;
 	std::cout << "request file : " << path << " found " << fileExists << std::endl;
 	return fileExists;
 }
@@ -203,25 +204,25 @@ bool	Response::ressourceExists(const std::string& path)
 
 // }
 
-void Response::getRessource()
-{
-	std::ifstream file(_ressourcePath.c_str(), std::ios_base::in);
+// void Response::getRessource()
+// {
+// 	std::ifstream file(_ressourcePath.c_str(), std::ios_base::in);
 
-	std::cout << _ressourcePath << "-----------------" << std::endl;
-	if (!file.is_open())
-	{
-		_statusCode = 500;
-		std::cerr << "Error opening ressource" << std::endl;
-		return;
-	}
+// 	std::cout << _ressourcePath << "-----------------" << std::endl;
+// 	if (!file.is_open())
+// 	{
+// 		_statusCode = 500;
+// 		std::cerr << "Error opening ressource" << std::endl;
+// 		return;
+// 	}
 
-	std::stringstream buffer;
-    buffer << file.rdbuf();
-	_body = buffer.str();
-	file.close();
+// 	std::stringstream buffer;
+//     buffer << file.rdbuf();
+// 	_body = buffer.str();
+// 	file.close();
 
-	_contentLength = _body.size();
-}
+// 	_contentLength = _body.size();
+// }
 
 void Response::readCustomErrorPage(const std::string& path)
 {
@@ -259,7 +260,7 @@ void	Response::generateHeader()
 void	Response::handleGet()
 {
 	setContentType();
-	getRessource();
+	// getRessource();
 }
 
 bool	Response::isDirectory(const std::string& str)
@@ -381,6 +382,7 @@ void	Response::reset()
 	_body.clear();
 	_ressourcePath.clear();
 	_contentLength = 0;
+	_fileSize = 0;
 	_pathIsDir = false;
 }
 
@@ -389,8 +391,9 @@ std::string Response::getContent() const
 	return _header + _body;
 }
 
+size_t Response::getFileSize() const { return _fileSize; }
 std::string Response::getPath() const { return _ressourcePath; }
 
 int Response::getStatus() const { return _statusCode ; }
 
-Response::Response(): _contentType("text/html"), _contentLength(0), _pathIsDir(false) {}
+Response::Response(): _contentType("text/html"), _contentLength(0), _pathIsDir(false), _fileSize(0) {}

@@ -25,6 +25,7 @@ class Response
 		std::string getContent() const;
 		std::string getPath() const;
 		int			getStatus() const;
+		size_t	getFileSize() const;
 
 		void 	readCustomErrorPage(const std::string& path);
 		static const std::map<int, std::string>& getStatusMessage();
@@ -43,6 +44,7 @@ class Response
 		size_t _contentLength;
 		std::string _ressourcePath;
 		bool	_pathIsDir;
+		size_t _fileSize;
 		//Route *_route;
 
 		static std::map<int, std::string> createStatusMessageMap();

@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <vector>
 #include <algorithm>
 #include <cstdlib>
 #include "utils.hpp"
@@ -145,6 +144,7 @@ bool Request::checkRequiredHeaderField()
 			return false;
 		}
 	}
+    return true;
     // if (_body.size() != static_cast<unsigned int>(contentLen))
     // {
     //     _status = 400;
@@ -181,5 +181,7 @@ int Request::getStatus() const { return _status; }
 Methods::eMethods Request::getMethod() const { return _method; }
 
 std::string	Request::getUrl() const { return _url; }
+
+size_t  Request::getPos() const { return _pos; }
 
 Request::Request(): _status(200), _pos(0) {}

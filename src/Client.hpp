@@ -20,6 +20,7 @@ class Client
 		void	setBuffer(const char *buffer);
 
 		bool	processRequest(const std::multimap<std::string, VirtualServer>& servers);
+		bool 	sendResponse();
         void    postRessource();
         void    readHeader();
         bool    serveFile();
@@ -33,7 +34,7 @@ class Client
 		int _port;
 		std::vector<unsigned char> _raw;
 		int _status;
-        
+        bool	_noDataLeft;
 		char _buffer[ConstVar::bufferSize + 1];
         size_t _cursor;
 		Request _request;

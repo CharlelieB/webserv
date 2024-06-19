@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <sstream>
+#include <vector>
 
 namespace Methods
 {
@@ -27,6 +28,7 @@ class Request
 		void    reset();
 		
 		int	getStatus() const;
+		size_t getPos() const;
 		Methods::eMethods	getMethod() const;
 		std::string	getUrl() const;
 		std::string	getHost() const;

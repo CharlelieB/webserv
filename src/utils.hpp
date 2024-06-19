@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sstream>
+#include <stdlib.h>
 
 namespace Utils
 {
@@ -13,6 +14,16 @@ namespace Utils
 		return str.str();
 	}
 
+	inline int strToNb(const std::string& str)
+	{
+		char* p;
+		long n = strtol(str.c_str(), &p, 10);
+		
+		if (*p)
+			return -1;
+		return n;
+	}
+	
 	inline std::string convertToLowercase(const std::string& str) 
 	{ 
     	std::string lowerStr = str;
