@@ -19,10 +19,13 @@ class Client
 		int getPort() const;
 		void	setBuffer(const char *buffer);
 
+
+		bool 	parseHeader();
 		bool	processRequest(const std::multimap<std::string, VirtualServer>& servers);
 		bool 	sendResponse();
         void    postRessource();
-        void    readHeader();
+        bool    readHeader();
+		bool 	sendData(const std::string& str);
         bool    serveFile();
 
 		const VirtualServer*	findVirtualServer(const std::multimap<std::string, VirtualServer>& servers, const Request& req) const;
@@ -34,7 +37,6 @@ class Client
 		int _port;
 		std::vector<unsigned char> _raw;
 		int _status;
-        bool	_noDataLeft;
 		char _buffer[ConstVar::bufferSize + 1];
         size_t _cursor;
 		Request _request;

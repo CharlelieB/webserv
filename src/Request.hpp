@@ -15,10 +15,10 @@ class Request
 	public:
 		Request();
 
-		void	parse(const std::vector<unsigned char>& buffer);
-		bool    parseRequestLine();
+		bool	parse(const std::vector<unsigned char>& buffer);
+		void    parseRequestLine();
 		bool	parseHeaders();
-		bool	checkRequiredHeaderField();
+		void	checkRequiredHeaderField();
 		bool    parseMethods(const std::string& method);
 		int		parseBodyLength(const std::string& str);
 		std::vector<unsigned char> getLine();

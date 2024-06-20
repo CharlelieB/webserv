@@ -78,7 +78,7 @@ bool Client::serveFile()
         return true;
     }
 
-    size_t fileSize = _response.getFileSize();
+    ssize_t fileSize = _response.getContentLen();
 
 	std::stringstream ss;
     ss << file.rdbuf();
@@ -90,6 +90,9 @@ bool Client::serveFile()
 
     for (;;)
     {
+        if (totalSent >= fileSize)
+            break;
+
         bytesLeft = fileSize - totalSent;
         chunkSize = (bytesLeft < ConstVar::bufferSize) ? bytesLeft : ConstVar::bufferSize;
 
@@ -112,40 +115,54 @@ void handleGetRequest()
     //serveFile()
 }
 
-void Client::readHeader()
+bool Client::parseHeader()
+{
+	std::vector<unsigned char> raw(_buffer, _buffer + std::strlen(_buffer));
+	return _request.parse(raw);
+}
+
+bool Client::readHeader()
 {
     size_t bytesLeft, bytesRead;
     size_t toRead = 4096;
     size_t totalBytesRead = 0;
 
-    while (totalBytesRead < toRead)
+	for (;;)
     {
+		if (totalBytesRead > ConstVar::bufferSize)
+		{
+			std::cout << "Header to large" << std::endl;
+			return false;
+		}
         bytesLeft = toRead - totalBytesRead;
 
-        bytesRead = recv(_sd, _buffer + totalBytesRead, bytesLeft, 0);
+        bytesRead = recv(_sd, _buffer, bytesLeft, 0);
         std::cout << "read " << bytesRead << std::endl;
 
         if (bytesRead < 0)
         {
             std::cout << "bad recv" << std::endl;
-            //check macro (two are fine other are error)
+			return false;
         }
         else if (bytesRead == 0)
         {
             // No more data (connection closed)
-            // if (totalBytesRead == 0)
-            // {
-            //     //connection closed
-            // }
-            //here must save the fact that we read everything
-            _noDataLeft = true;
-            break;
+            if (totalBytesRead == 0)
+            {
+                std::cout << "Connection closed by client" << std::endl;
+            }
+            return false;
         }
         totalBytesRead += bytesRead;
+
+    	_buffer[totalBytesRead] = '\0';
+		if (parseHeader())
+			break;
     }
-        std::cout << "test " << totalBytesRead << std::endl;
-    _buffer[totalBytesRead] = '\0';
+    std::cout << "test " << totalBytesRead << std::endl;
+    //_buffer[totalBytesRead] = '\0';
     std::cout << _buffer << std::endl;
+    return true;
 }
 
 void Client::postRessource()
@@ -172,11 +189,13 @@ void Client::postRessource()
     const unsigned char *c_str = _raw.data();
     outFile.write(reinterpret_cast<const char*>(c_str + _cursor), bytesToWrite);
 
-    if (!_noDataLeft)
+    size_t bodyLen = Utils::strToNb(_request.getHeaders().find("content-length")->second);
+    
+    if (bodyLen - bytesToWrite != 0)
     {
-        ssize_t totalRead = 0, bytesRead = 0;
+        //ssize_t totalRead = 0, bytesRead = 0;
+        ssize_t bytesRead = 0;
         
-        size_t bodyLen = Utils::strToNb(_request.getHeaders().find("content-length")->second);
         char* buffer = new char[bodyLen + 1];
         for (;;)
         {
@@ -192,7 +211,7 @@ void Client::postRessource()
                 break;
             }
 
-            totalRead += bytesRead;
+            //totalRead += bytesRead;
         }
         outFile.write(buffer, bytesRead);
         delete[] buffer;
@@ -200,10 +219,39 @@ void Client::postRessource()
     outFile.close();
 }
 
+bool Client::sendData(const std::string& str)
+{
+    const char* buffer = str.c_str();
+
+    ssize_t toSend = strlen(buffer);
+    ssize_t totalSent = 0, bytesLeft, chunkSize, bytesSent;
+
+    for (;;)
+    {
+        if (totalSent >= toSend)
+            break;
+
+        bytesLeft = toSend - totalSent;
+        chunkSize = (bytesLeft < ConstVar::bufferSize) ? bytesLeft : ConstVar::bufferSize;
+
+        bytesSent = send(_sd, buffer + totalSent, chunkSize, 0);
+    std::cout << "total send " << totalSent << std::endl; 
+        if (bytesSent < 0)
+        {
+            return false;
+        }
+        totalSent += bytesSent;
+    }
+    return true;
+}
+
 bool Client::sendResponse()
 {
     if (!_mustSend)
         return true;
+
+    if (!sendData(_response.getHeader()))
+        return false;
     if (_status == 200)
     {
         if (_request.getMethod() == Methods::GET)
@@ -216,20 +264,24 @@ bool Client::sendResponse()
             postRessource();
         }
     }
-    // if (_status != 200)
-    //     handleErrorPage();
+    if (_status != 200)
+        sendData(_response.getBody());
+    //close(_sd);
+    _mustSend = false;
+	_response.reset();
     return true;
 }
 
 bool Client::processRequest(const std::multimap<std::string, VirtualServer>& servers)
 {
-    readHeader();
+    if (!readHeader())
+        return false;
 
-    std::vector<unsigned char> raw(_buffer, _buffer + std::strlen(_buffer));
+    //std::vector<unsigned char> raw(_buffer, _buffer + std::strlen(_buffer));
 
-    _request.parse(raw); //in parsing we must check if we found the /r/n empty line (if no, request header too large)
+    //_request.parse(raw); //in parsing we must check if we found the /r/n empty line (if no, request header too large)
 
-    _raw = raw;
+    //_raw = raw;
     _cursor = _request.getPos();
 
 	const VirtualServer *server = findVirtualServer(servers, _request);

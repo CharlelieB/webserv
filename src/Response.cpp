@@ -194,7 +194,7 @@ bool	Response::ressourceExists(const std::string& path)
 
 	// if (fileExists)
   	// 	_pathIsDir = S_ISDIR(buffer.st_mode);
-	_fileSize = buffer.st_size;
+	_contentLength = buffer.st_size;
 	std::cout << "request file : " << path << " found " << fileExists << std::endl;
 	return fileExists;
 }
@@ -239,7 +239,6 @@ void Response::readCustomErrorPage(const std::string& path)
 	_body = buffer.str();
 
 	file.close();
-	_contentLength = _body.size();
 }
 
 // void Response::postRessource(const std::string& path)
@@ -253,7 +252,7 @@ void	Response::generateHeader()
 	std::ostringstream os;
 	
 	os << "HTTP/1.1 " << _statusCode << " " << getStatusMessage().at(_statusCode) << "\r\n"
-		<< "server: Webserv\r\n" << "content-length: " << _body.size() << "\r\n" << "content-type:" << _contentType << "\r\n\r\n";
+		<< "server: Webserv\r\n" << "content-length: " << _contentLength << "\r\n" << "content-type:" << _contentType << "\r\n\r\n";
 	_header = os.str();
 }
 
@@ -352,13 +351,13 @@ void	Response::build(const VirtualServer& server, const Request &request)
 {
 	_statusCode = request.getStatus();
 	_ressourcePath = request.getUrl();
+std::cout << "ressource path " << _ressourcePath << std::endl;
 
 	const Route *route = server.findRoute(_ressourcePath);
 
-std::cout << "DEBUG - Request path : " << _ressourcePath << std::endl;
-
 	manageRouting(route, request);
 
+std::cout << "DEBUG - Request path : " << _ressourcePath << std::endl;
 	if (_statusCode == 200)
 	{
 		handleRequestByMethod(route, request);
@@ -372,6 +371,7 @@ std::cout << "DEBUG - Request path : " << _ressourcePath << std::endl;
 			readCustomErrorPage("www/" + errorPage);
 		else
 			_body = ErrorPages::getDefaultErrorPage(_statusCode, getStatusMessage().at(_statusCode)); //could be dangerous if map return map.end()
+		_contentLength = _body.size();
 	}
 	generateHeader();
 }
@@ -382,18 +382,27 @@ void	Response::reset()
 	_body.clear();
 	_ressourcePath.clear();
 	_contentLength = 0;
-	_fileSize = 0;
 	_pathIsDir = false;
 }
 
-std::string Response::getContent() const
+// std::string Response::getContent() const
+// {
+// 	return _header + _body;
+// }
+
+std::string Response::getBody() const
 {
-	return _header + _body;
+	return _body;
 }
 
-size_t Response::getFileSize() const { return _fileSize; }
+std::string Response::getHeader() const
+{
+	return _header;
+}
+
+size_t Response::getContentLen() const { return _contentLength; }
 std::string Response::getPath() const { return _ressourcePath; }
 
 int Response::getStatus() const { return _statusCode ; }
 
-Response::Response(): _contentType("text/html"), _contentLength(0), _pathIsDir(false), _fileSize(0) {}
+Response::Response(): _contentType("text/html"), _contentLength(0), _pathIsDir(false) {}

@@ -41,14 +41,13 @@ bool    Request::parseMethods(const std::string& method)
     return true;
 }
 
-bool    Request::parseRequestLine()
+void    Request::parseRequestLine()
 {
 	std::vector<unsigned char> requestLine = getLine();
-
     if (requestLine.empty())
 	{
 		_status = 400;
-        return false;
+        return;
 	}
 
     size_t methodEnd = std::find(requestLine.begin(), requestLine.end(), ' ') - requestLine.begin();
@@ -56,14 +55,14 @@ bool    Request::parseRequestLine()
 	if (methodEnd == requestLine.size())
     {	
 		_status = 400;
-		return false;
+		return;
 	}
 
     size_t uriEnd = std::find(requestLine.begin() + methodEnd + 1, requestLine.end(), ' ') - requestLine.begin();
     if (uriEnd == requestLine.size())
 	{
 		_status = 400;
-        return false;
+        return;
 	}
 
     std::string method(requestLine.begin(), requestLine.begin() + methodEnd);
@@ -73,17 +72,16 @@ bool    Request::parseRequestLine()
     if (!parseMethods(method))
     {
         _status = 405;
-        return false;
+        return;
     }
 
     _url = uri;
-    
+    std::cout << "debug ------------------------------ " << _url << std::endl;
     if (httpVersion != "HTTP/1.1")
     {
         _status = 505;
-        return false;
+        return;
     }
-    return true;
 }
 
 bool    Request::parseHeaders()
@@ -94,6 +92,7 @@ bool    Request::parseHeaders()
         std::vector<unsigned char> headerLine = getLine();
         if (headerLine.empty())
 		{
+            checkRequiredHeaderField();
         	return true;
         }
         size_t colonPos = std::find(headerLine.begin(), headerLine.end(), ':') - headerLine.begin();
@@ -108,13 +107,13 @@ bool    Request::parseHeaders()
 		else
 		{
         	_status = 400;
-        	return false;
+        	return true;
 		}
     }
-    return true;
+    return false;
 }
 
-bool Request::checkRequiredHeaderField()
+void Request::checkRequiredHeaderField()
 {
     //if no host field, bad request
     std::map<std::string, std::string>::const_iterator it = _headers.find("host");
@@ -122,7 +121,7 @@ bool Request::checkRequiredHeaderField()
     if (it == _headers.end())
     {
         _status = 400;
-        return false;
+        return;
     }
 
 	if (_method == Methods::POST)
@@ -133,7 +132,7 @@ bool Request::checkRequiredHeaderField()
 		if (it == _headers.end())
 		{
 			_status = 411;
-			return false;
+			return;
 		}
 
 		int contentLen = parseBodyLength(it->second);
@@ -141,10 +140,9 @@ bool Request::checkRequiredHeaderField()
 		if (contentLen == -1)
 		{
 			_status = 400;
-			return false;
+			return;
 		}
 	}
-    return true;
     // if (_body.size() != static_cast<unsigned int>(contentLen))
     // {
     //     _status = 400;
@@ -153,14 +151,16 @@ bool Request::checkRequiredHeaderField()
     // }
 }
 
-void Request::parse(const std::vector<unsigned char>& buffer)
+bool Request::parse(const std::vector<unsigned char>& buffer)
 {
+    _pos = 0;
     _buffer = buffer;
 
-   if (!parseRequestLine())
-	return;
-   if (!parseHeaders() || !checkRequiredHeaderField())
-	return;
+   parseRequestLine();
+    if (_status == 200)
+        if (!parseHeaders()) //if false, body is not found
+            return false;
+	return true;
 }
 
 void    Request::reset()
