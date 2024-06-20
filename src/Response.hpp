@@ -37,6 +37,8 @@ class Response
 		void	checkLocationRules(const Route& route);
 		void 	normalizePath();
 		void	setContentType();
+		void 	checkCGI();
+		bool 	isCGI(const std::string &str) const;
 	private:
 		int _statusCode;
 		std::string _header;
@@ -46,6 +48,7 @@ class Response
 		size_t _contentLength;
 		std::string _ressourcePath;
 		bool	_pathIsDir;
+		bool	_isCgi;
 		//Route *_route;
 
 		static std::map<int, std::string> createStatusMessageMap();

@@ -282,6 +282,23 @@ void	Response::setupRoute(const Route& route)
 	}
 }
 
+bool Response::isCGI(const std::string &str) const
+{
+	return str == "php";
+}
+
+void Response::checkCGI()
+{
+	if (!_pathIsDir)
+	{
+		size_t pos = _ressourcePath.find_last_of('.');
+		if (pos != std::string::npos)
+		{
+			_isCgi = isCGI(_ressourcePath.substr(pos + 1));
+		}
+	}
+}
+
 void Response::setContentType()
 {
 	if (!_pathIsDir)
@@ -290,9 +307,14 @@ void Response::setContentType()
 
 		if (pos != std::string::npos)
 		{
+			std::string extension = _ressourcePath.substr(pos + 1);
+			_isCgi = isCGI(extension);
+			if (_isCgi)
+				return;
+
 			try
 			{
-				_contentType = getContentType().at(_ressourcePath.substr(pos + 1));
+				_contentType = getContentType().at(extension);
 			}
 			catch (const std::out_of_range& oor)
 			{
@@ -343,6 +365,7 @@ void Response::handleRequestByMethod(const Route *route, const Request &request)
 	}
 	else if (request.getMethod() == Methods::POST)
 	{
+		checkCGI();
 		//look if rights are ok and create a file then write the content in it, ensure to respect max_body_size of conf
 	}
 }
@@ -383,6 +406,7 @@ void	Response::reset()
 	_ressourcePath.clear();
 	_contentLength = 0;
 	_pathIsDir = false;
+	_isCgi = false;
 }
 
 // std::string Response::getContent() const
@@ -405,4 +429,4 @@ std::string Response::getPath() const { return _ressourcePath; }
 
 int Response::getStatus() const { return _statusCode ; }
 
-Response::Response(): _contentType("text/html"), _contentLength(0), _pathIsDir(false) {}
+Response::Response(): _contentType("text/html"), _contentLength(0), _pathIsDir(false), _isCgi(false) {}
