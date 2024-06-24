@@ -4,6 +4,7 @@
 #include <cerrno>
 #include "ServerManager.hpp"
 #include "utils.hpp"
+#include <fcntl.h>
 
 void	ServerManager::setAddressesToListen()
 {
@@ -71,6 +72,29 @@ void	ServerManager::addServerSocketsToSet()
 	}
 }
 
+int setNonBlocking(int sockfd)
+{
+    int flags;
+
+    // Get the current flags for the socket
+    flags = fcntl(sockfd, F_GETFL, 0);
+    if (flags == -1)
+    {
+        perror("fcntl F_GETFL");
+        return -1;
+    }
+
+    // Set the socket to non-blocking mode
+    flags |= O_NONBLOCK;
+    if (fcntl(sockfd, F_SETFL, flags) == -1)
+    {
+        perror("fcntl F_SETFL");
+        return -1;
+    }
+
+    return 0;
+}
+
 void	ServerManager::run()
 {
     _addrlen = sizeof(_address);
@@ -84,6 +108,13 @@ void	ServerManager::run()
         if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 		{
             perror("socket failed");
+            //TODO don't exit just remove addr
+            exit(EXIT_FAILURE);
+        }
+
+        if (setNonBlocking(server_socket) == -1)
+        {
+            close(server_socket);
             exit(EXIT_FAILURE);
         }
 
@@ -142,6 +173,7 @@ void	ServerManager::run()
         // Handle IO operations on client sockets
         for (std::vector<Client>::iterator client = _clients.begin(); client != _clients.end();)
 		{
+                std::cout << "debug--------------KEEPALIVE--------------------" << std::endl;
             _sd = client->getSd();
             if (FD_ISSET(_sd, &_readfds))
 			{

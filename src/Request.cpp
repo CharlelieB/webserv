@@ -160,7 +160,7 @@ bool Request::parse(const std::vector<unsigned char>& buffer)
     if (_status == 200)
         if (!parseHeaders()) //if false, body is not found
             return false;
-	return true;
+    return true;
 }
 
 void    Request::reset()

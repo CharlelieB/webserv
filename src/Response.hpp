@@ -27,7 +27,8 @@ class Response
 		std::string getHeader() const;
 		std::string getBody() const;
 		int			getStatus() const;
-		size_t	getContentLen() const;
+		size_t		getContentLen() const;
+		bool		getIsCGI() const;
 
 		void 	readCustomErrorPage(const std::string& path);
 		static const std::map<int, std::string>& getStatusMessage();

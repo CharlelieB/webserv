@@ -2,6 +2,18 @@
 #include "Conf.hpp"
 #include "Request.hpp"
 #include "ServerManager.hpp"
+#include <signal.h>
+#include <unistd.h>
+
+// Ignore SIGPIPE signal
+void ignore_sigpipe() {
+    struct sigaction sa;
+    sa.sa_handler = SIG_IGN;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGPIPE, &sa, NULL);
+}
+
 
 int	main(int argc, char **argv)
 {
@@ -10,6 +22,8 @@ int	main(int argc, char **argv)
 		std::cout << "Wrong arguments" << std::endl;
 		return 1;
 	}
+
+	ignore_sigpipe();
 
 	Configuration config(argv[1]);
 

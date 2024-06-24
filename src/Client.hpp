@@ -28,6 +28,9 @@ class Client
 		bool 	sendData(const std::string& str);
         bool    serveFile();
 
+		void	setCGIEnv(std::vector<std::string>& env) const;
+		bool 	handleCGI() const;
+
 		const VirtualServer*	findVirtualServer(const std::multimap<std::string, VirtualServer>& servers, const Request& req) const;
 	private:
 		Client();

@@ -428,5 +428,6 @@ size_t Response::getContentLen() const { return _contentLength; }
 std::string Response::getPath() const { return _ressourcePath; }
 
 int Response::getStatus() const { return _statusCode ; }
+bool Response::getIsCGI() const { return _isCgi ; }
 
 Response::Response(): _contentType("text/html"), _contentLength(0), _pathIsDir(false), _isCgi(false) {}

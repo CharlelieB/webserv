@@ -96,13 +96,23 @@ bool Client::serveFile()
         bytesLeft = fileSize - totalSent;
         chunkSize = (bytesLeft < ConstVar::bufferSize) ? bytesLeft : ConstVar::bufferSize;
 
+
         bytesSent = send(_sd, buffer + totalSent, chunkSize, 0);
         if (bytesSent < 0)
         {
+            //debug purpose
+            if (errno == EPIPE) {
+                std::cerr << "Socket closed by client (EPIPE)" << std::endl;
+            } else {
+                perror("send");
+            }
             return false;
         }
         totalSent += bytesSent;
+                            std::cout << "END-------------------" << totalSent << " " << fileSize << " bytes sent " << bytesSent << std::endl;
+
     }
+
     return true;
 }
 
@@ -235,15 +245,70 @@ bool Client::sendData(const std::string& str)
         chunkSize = (bytesLeft < ConstVar::bufferSize) ? bytesLeft : ConstVar::bufferSize;
 
         bytesSent = send(_sd, buffer + totalSent, chunkSize, 0);
-    std::cout << "total send " << totalSent << std::endl; 
         if (bytesSent < 0)
         {
             return false;
         }
         totalSent += bytesSent;
+    std::cout << "total send " << totalSent << std::endl;
     }
     return true;
 }
+
+// void Client::setCGIEnv(std::vector<std::string>& env) const
+// {
+//     env.push_back("REQUEST_METHOD=" + _request.getMethod());
+//     env.push_back("QUERY_STRING=" + queryString);
+//     env.push_back("SCRIPT_NAME=" + scriptName);
+//     env.push_back("SERVER_SOFTWARE=" + serverSoftware);
+//     env.push_back("SERVER_NAME=" + serverName);
+//     env.push_back("SERVER_PROTOCOL=" + serverProtocol);
+//     env.push_back("SERVER_PORT=" + serverPort);
+//     env.push_back("REMOTE_ADDR=" + remoteAddr);
+//     env.push_back("REMOTE_HOST=" + remoteHost);
+//     env.push_back("CONTENT_TYPE=" + contentType);
+//     env.push_back("CONTENT_LENGTH=" + contentLength);
+//     env.push_back("HTTP_USER_AGENT=" + httpUserAgent);
+//     env.push_back("HTTP_REFERER=" + httpReferer);
+
+// }
+
+// void Client::execCGI() const
+// {
+//     setCGIEnv();
+//     std::vector<std::string> env;
+
+//     setCGIEnv(env);
+//     char *scriptPath = _response.getPath().c_str();
+//     static char *args[] = { "/usr/bin/php-cgi", scriptPath, NULL };
+
+//     if (execve(args[0], args, NULL) == -1)
+//     {
+//         perror("execve failed");
+//     }
+// }
+
+// bool Client::handleCGI() const
+// {
+//     pid_t pid;
+
+//     int pid = fork();
+
+//     switch (pid)
+//     {
+//         case -1:
+//             perror("fork");
+//             return false;
+//         case 0:
+//             execCGI();
+//             //if we are here execve failed
+//             return true;
+//         default:
+//             int status;
+//             waitpid(-1, &status, 0);
+//     }
+
+// }
 
 bool Client::sendResponse()
 {
@@ -254,10 +319,14 @@ bool Client::sendResponse()
         return false;
     if (_status == 200)
     {
+        // if (_response.getIsCGI())
+        //     handleCGI();
         if (_request.getMethod() == Methods::GET)
         {
             if (!serveFile())
-                return false;
+            {
+                return false;   
+            }
         }
         else if (_request.getMethod() == Methods::POST)
         {
@@ -265,7 +334,9 @@ bool Client::sendResponse()
         }
     }
     if (_status != 200)
+    {
         sendData(_response.getBody());
+    }
     //close(_sd);
     _mustSend = false;
 	_response.reset();
