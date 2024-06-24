@@ -180,7 +180,7 @@ void Client::postRessource()
     if (_request.getHeaders().find("content-length") == _request.getHeaders().end())
     {
         _status = 411;
-        return;        
+        return;
     }
 
     //open file
@@ -255,38 +255,18 @@ bool Client::sendData(const std::string& str)
     return true;
 }
 
-// void Client::setCGIEnv(std::vector<std::string>& env) const
-// {
-//     env.push_back("REQUEST_METHOD=" + _request.getMethod());
-//     env.push_back("QUERY_STRING=" + queryString);
-//     env.push_back("SCRIPT_NAME=" + scriptName);
-//     env.push_back("SERVER_SOFTWARE=" + serverSoftware);
-//     env.push_back("SERVER_NAME=" + serverName);
-//     env.push_back("SERVER_PROTOCOL=" + serverProtocol);
-//     env.push_back("SERVER_PORT=" + serverPort);
-//     env.push_back("REMOTE_ADDR=" + remoteAddr);
-//     env.push_back("REMOTE_HOST=" + remoteHost);
-//     env.push_back("CONTENT_TYPE=" + contentType);
-//     env.push_back("CONTENT_LENGTH=" + contentLength);
-//     env.push_back("HTTP_USER_AGENT=" + httpUserAgent);
-//     env.push_back("HTTP_REFERER=" + httpReferer);
+void Client::execCGI() const
+{
+    std::string path = _response.getPath(); 
+    const char *scriptPath = path.c_str();
 
-// }
+    static const char *args[] = { "/usr/bin/php-cgi", scriptPath, NULL };
 
-// void Client::execCGI() const
-// {
-//     setCGIEnv();
-//     std::vector<std::string> env;
-
-//     setCGIEnv(env);
-//     char *scriptPath = _response.getPath().c_str();
-//     static char *args[] = { "/usr/bin/php-cgi", scriptPath, NULL };
-
-//     if (execve(args[0], args, NULL) == -1)
-//     {
-//         perror("execve failed");
-//     }
-// }
+    if (execve(args[0], const_cast<char* const*>(args), _response.getCGIEnv().data()) == -1)
+    {
+        perror("execve failed");
+    }
+}
 
 // bool Client::handleCGI() const
 // {

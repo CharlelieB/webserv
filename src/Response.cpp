@@ -282,9 +282,25 @@ void	Response::setupRoute(const Route& route)
 	}
 }
 
-bool Response::isCGI(const std::string &str) const
+void Response::setCGIEnv()
 {
-	return str == "php";
+	std::vector<std::string> env;
+    std::string query;
+    std::string method;
+
+    if (_method == Methods::POST)
+        method = "POST";
+    else if (_method == Methods::GET)
+        method = "GET";
+
+    env.push_back("REQUEST_METHOD=" + method);
+    env.push_back("QUERY_STRING=" + _queryString);
+    env.push_back("SCRIPT_NAME=" + _ressourcePath);
+    env.push_back("SERVER_PROTOCOL=HTTP/1.1");
+
+	for (std::vector<std::string>::const_iterator it = env.begin(); it != env.end(); ++it)
+        _CGIEnv.push_back(const_cast<char*>(it->c_str()));
+    _CGIEnv.push_back(NULL);
 }
 
 void Response::checkCGI()
@@ -294,7 +310,18 @@ void Response::checkCGI()
 		size_t pos = _ressourcePath.find_last_of('.');
 		if (pos != std::string::npos)
 		{
-			_isCgi = isCGI(_ressourcePath.substr(pos + 1));
+			_extension = _ressourcePath.substr(pos + 1);
+			pos = _extension.find('?');
+			if (pos != std::string::npos)
+			{
+				//get variables after ?
+				_queryString = _ressourcePath.substr(pos + 1);
+				_extension = _extension.substr(0, pos - 1);
+				//remove variables (?name=value) from path
+				_ressourcePath = _ressourcePath.substr(0, pos - 1);
+			}
+			if ((_isCgi = (_extension == "php")))
+				setCGIEnv();
 		}
 	}
 }
@@ -307,14 +334,13 @@ void Response::setContentType()
 
 		if (pos != std::string::npos)
 		{
-			std::string extension = _ressourcePath.substr(pos + 1);
-			_isCgi = isCGI(extension);
+			checkCGI();
 			if (_isCgi)
 				return;
 
 			try
 			{
-				_contentType = getContentType().at(extension);
+				_contentType = getContentType().at(_extension);
 			}
 			catch (const std::out_of_range& oor)
 			{
@@ -326,12 +352,12 @@ void Response::setContentType()
 	}
 }
 
-void Response::manageRouting(const Route* route, const Request &request)
+void Response::manageRouting(const Route* route)
 {
 	_pathIsDir = isDirectory(_ressourcePath);
 	if (route)
 	{
-		if (!route->isMethodAllowed(request.getMethod()))
+		if (!route->isMethodAllowed(_method))
 		{
 			_statusCode = 405;
 			return;
@@ -349,9 +375,9 @@ void Response::manageRouting(const Route* route, const Request &request)
 		_statusCode = 404;
 }
 
-void Response::handleRequestByMethod(const Route *route, const Request &request)
+void Response::handleRequestByMethod(const Route *route)
 {
-	if (request.getMethod() == Methods::GET)
+	if (_method == Methods::GET)
 	{
 		if (_pathIsDir)
 		{
@@ -363,7 +389,7 @@ void Response::handleRequestByMethod(const Route *route, const Request &request)
 		else
 			handleGet();
 	}
-	else if (request.getMethod() == Methods::POST)
+	else if (_method == Methods::POST)
 	{
 		checkCGI();
 		//look if rights are ok and create a file then write the content in it, ensure to respect max_body_size of conf
@@ -372,18 +398,19 @@ void Response::handleRequestByMethod(const Route *route, const Request &request)
 
 void	Response::build(const VirtualServer& server, const Request &request)
 {
+	_method = request.getMethod();
 	_statusCode = request.getStatus();
 	_ressourcePath = request.getUrl();
 std::cout << "ressource path " << _ressourcePath << std::endl;
 
 	const Route *route = server.findRoute(_ressourcePath);
 
-	manageRouting(route, request);
+	manageRouting(route);
 
 std::cout << "DEBUG - Request path : " << _ressourcePath << std::endl;
 	if (_statusCode == 200)
 	{
-		handleRequestByMethod(route, request);
+		handleRequestByMethod(route);
 	}
 
 	if (_statusCode != 200)
@@ -407,6 +434,9 @@ void	Response::reset()
 	_contentLength = 0;
 	_pathIsDir = false;
 	_isCgi = false;
+	_queryString.clear();
+	_extension.clear();
+	_CGIEnv.clear();
 }
 
 // std::string Response::getContent() const
@@ -429,5 +459,6 @@ std::string Response::getPath() const { return _ressourcePath; }
 
 int Response::getStatus() const { return _statusCode ; }
 bool Response::getIsCGI() const { return _isCgi ; }
+std::vector<char *> Response::getCGIEnv() const { return _CGIEnv; }
 
 Response::Response(): _contentType("text/html"), _contentLength(0), _pathIsDir(false), _isCgi(false) {}

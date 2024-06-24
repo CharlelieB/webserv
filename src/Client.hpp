@@ -30,6 +30,7 @@ class Client
 
 		void	setCGIEnv(std::vector<std::string>& env) const;
 		bool 	handleCGI() const;
+		void 	execCGI() const;
 
 		const VirtualServer*	findVirtualServer(const std::multimap<std::string, VirtualServer>& servers, const Request& req) const;
 	private:

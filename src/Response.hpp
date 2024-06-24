@@ -17,7 +17,7 @@ class Response
 		bool	ressourceExists(const std::string& path);
 		void	handleGet();
 		void	setupRoute(const Route& route);
-		void	manageRouting(const Route* route, const Request &request);
+		void	manageRouting(const Route* route);
 		void 	addIndex(const std::string &indexFile);
 		void 	rootPath(const std::string &root);
 		void	reset();
@@ -29,17 +29,18 @@ class Response
 		int			getStatus() const;
 		size_t		getContentLen() const;
 		bool		getIsCGI() const;
+		std::vector<char *> getCGIEnv() const;
 
 		void 	readCustomErrorPage(const std::string& path);
 		static const std::map<int, std::string>& getStatusMessage();
 		static const std::map<std::string, std::string>& getContentType();
-		void	handleRequestByMethod(const Route* route, const Request &request);
+		void	handleRequestByMethod(const Route* route);
 		bool	isDirectory(const std::string& str);
 		void	checkLocationRules(const Route& route);
 		void 	normalizePath();
 		void	setContentType();
 		void 	checkCGI();
-		bool 	isCGI(const std::string &str) const;
+		void 	setCGIEnv();
 	private:
 		int _statusCode;
 		std::string _header;
@@ -50,8 +51,13 @@ class Response
 		std::string _ressourcePath;
 		bool	_pathIsDir;
 		bool	_isCgi;
+		std::string _queryString;
+		std::string _extension;
+		Methods::eMethods _method;
 		//Route *_route;
 
 		static std::map<int, std::string> createStatusMessageMap();
 		static std::map<std::string, std::string> createContentTypeMap();
+
+		std::vector<char*> _CGIEnv;
 };
