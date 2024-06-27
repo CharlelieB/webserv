@@ -177,8 +177,9 @@ void	ServerManager::run()
             if (FD_ISSET(_sd, &_readfds))
 			{
                 if (!client->processRequest(_servers))
-                {
                     client = this->removeClient(client);
+                else
+                {
                     if (FD_ISSET(_sd, &_writefds))
                     {
                         if (!client->sendResponse())
@@ -186,9 +187,9 @@ void	ServerManager::run()
                         else
                             ++client;
                     }
+                    else
+                        ++client;
                 }
-                else
-                    ++client;
             }
 			else if (FD_ISSET(_sd, &_exceptfds))
 			{

@@ -157,9 +157,11 @@ bool Request::parse(const std::vector<unsigned char>& buffer)
     _buffer = buffer;
 
    parseRequestLine();
+
     if (_status == 200)
         if (!parseHeaders()) //if false, body is not found
             return false;
+
     return true;
 }
 

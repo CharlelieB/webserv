@@ -115,10 +115,9 @@ bool Client::serveFile()
     return true;
 }
 
-bool Client::parseHeader()
+bool Client::parseHeader(size_t pos)
 {
-	std::vector<unsigned char> raw(_buffer, _buffer + std::strlen(_buffer));
-    raw.push_back(0);
+	std::vector<unsigned char> raw(_buffer, _buffer + pos);
     _raw = raw;
 	return _request.parse(raw);
 }
@@ -156,14 +155,12 @@ std::cout << "Read header nb of bytes " << bytesRead << std::endl;
         }
         totalBytesRead += bytesRead;
 
-    	_buffer[totalBytesRead] = '\0';
-		if (parseHeader())
+		if (parseHeader(bytesRead))
 			break;
     }
     std::cout << "Read header - Total read " << totalBytesRead << std::endl;
     _cursor = _request.getPos();
-    //_buffer[totalBytesRead] = '\0';
-    //std::cout << _buffer << std::endl;
+    std::cout << _buffer << std::endl;
     return true;
 }
 
@@ -173,30 +170,32 @@ bool Client::readBody()
 
     _bodyBuffer = new unsigned char[bodyLen + 50000];
 
-    std::size_t bytesToWrite = _raw.size() - _cursor;
+    //std::size_t bytesToWrite = _raw.size() - 1 - _cursor;
 
-    //we write the body we got from the first recv
-    // Copy initial data from _raw to _bodyBuffer
-    if (bytesToWrite > 0)
+    std::cout << "Raw size" << _raw.size() << std::endl;
+    int j = 0;
+    for (size_t i = _cursor; i < _raw.size(); ++i)
     {
-        std::memcpy(_bodyBuffer, _raw.data() + _cursor, bytesToWrite);
+        _bodyBuffer[j++] = _raw[i];
     }
+    //we write the body we got from the first recv
+    // if (bytesToWrite > 0)
+    // {
+    //     std::memcpy(_bodyBuffer, _raw.data() + _cursor, bytesToWrite);
+    // }
 
-    // _bodyBuffer = _raw.data() + _cursor;
-
-    std::size_t totalRead = bytesToWrite;
-    std::cout << "test-------------------read" << _bodyBuffer << " " << totalRead << " " << _cursor << " " << bodyLen << std::endl;
+    std::size_t totalRead = j;
+    std::cout << "test-------------------read" << " " << totalRead << " " << _cursor << " " << bodyLen << std::endl;
 
     ssize_t bytesRead = 0;
     std::size_t bytesLeft, chunkSize;
         
     //if there is more to read
-    while (totalRead <= bodyLen)
+    while (totalRead < bodyLen)
     {
-     
         bytesLeft = bodyLen - totalRead;
         chunkSize = (bytesLeft < ConstVar::bufferSize) ? bytesLeft : ConstVar::bufferSize;
-        bytesRead = recv(_sd, _bodyBuffer + totalRead, chunkSize, 0);
+        bytesRead = recv(_sd, _bodyBuffer + totalRead, chunkSize, 0);   
         std::cout << "test000000 - " << bytesRead << " " << totalRead << " " << bodyLen << " " << bytesLeft << std::endl;
         if (bytesRead < 0)
         {
@@ -204,8 +203,8 @@ bool Client::readBody()
         }
         totalRead += bytesRead;
     }
-    std::cout << " END " << std::endl;
-    _bodyBuffer[totalRead] = 0;
+    std::cout << " END " << totalRead << std::endl;
+    //_bodyBuffer[totalRead] = 0;
     return true;
 }
 
@@ -222,6 +221,7 @@ bool Client::postRessource()
     }
 
     std::cout << "file name : ----------------------" << _response.getPath().c_str() << std::endl;
+    std::cout << "content len to write : ----------------------" << _request.getContentLen() << std::endl;
 
     outFile.write(reinterpret_cast<const char*>(_bodyBuffer), _request.getContentLen());
     outFile.close();
@@ -314,10 +314,10 @@ void Client::execCGI() const
 
 bool Client::sendResponse()
 {
+    std::cout << "Test repsponse" << std::endl;
     if (!_mustSend)
         return true;
 
-    std::cout << "Test repsponse" << std::endl;
     if (!sendData(_response.getHeader()))
         return false;
     std::cout << _status << "debugyessttt" << std::endl;
@@ -351,11 +351,15 @@ bool Client::sendResponse()
     //close(_sd);
     _mustSend = false;
 	_response.reset();
+    _request.reset();
     return true;
 }
 
 bool Client::processRequest(const std::multimap<std::string, VirtualServer>& servers)
 {
+    if (_mustSend)
+        return true;
+
     std::cout << "Test requestt" << std::endl;
     
     if (!readHeader() || !readBody())
@@ -372,11 +376,9 @@ bool Client::processRequest(const std::multimap<std::string, VirtualServer>& ser
 	}
 
 	_response.build(*server, _request);
-	_request.reset();
 	_mustSend = true;
 
     _status = _response.getStatus();
-
     return true;
 }
 

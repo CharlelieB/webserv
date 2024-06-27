@@ -20,7 +20,7 @@ class Client
 		void	setBuffer(const char *buffer);
 
 
-		bool 	parseHeader();
+		bool 	parseHeader(size_t pos);
 		bool	processRequest(const std::multimap<std::string, VirtualServer>& servers);
 		bool 	sendResponse();
         bool    postRessource();
