@@ -4,6 +4,7 @@
 #include <map>
 #include <sstream>
 #include <vector>
+#include <cstdio>
 
 namespace Methods
 {
@@ -20,9 +21,10 @@ class Request
 		bool	parseHeaders();
 		void	checkRequiredHeaderField();
 		bool    parseMethods(const std::string& method);
-		int		parseBodyLength(const std::string& str);
+		ssize_t		parseBodyLength(const std::string& str);
 		std::vector<unsigned char> getLine();
 		std::map<std::string, std::string> getHeaders() const;
+		ssize_t		getContentLen() const;
 
 		void	addHeader(const std::string& key, const std::string& value);
 		void    reset();
@@ -35,6 +37,7 @@ class Request
 	private:
 		Methods::eMethods _method;
 		int	_status;
+		ssize_t _contentLen;
 		std::string _url;
 		std::map<std::string, std::string> _headers;
 		std::vector<unsigned char> _buffer;

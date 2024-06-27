@@ -96,7 +96,6 @@ bool Client::serveFile()
         bytesLeft = fileSize - totalSent;
         chunkSize = (bytesLeft < ConstVar::bufferSize) ? bytesLeft : ConstVar::bufferSize;
 
-
         bytesSent = send(_sd, buffer + totalSent, chunkSize, 0);
         if (bytesSent < 0)
         {
@@ -116,18 +115,10 @@ bool Client::serveFile()
     return true;
 }
 
-void handleGetRequest()
-{
-    //check if ressource exist
-    //open the file
-    //read in chunk and send at the same time
-    //how to handle error_page?
-    //serveFile()
-}
-
 bool Client::parseHeader()
 {
 	std::vector<unsigned char> raw(_buffer, _buffer + std::strlen(_buffer));
+    _raw = raw;
 	return _request.parse(raw);
 }
 
@@ -147,7 +138,7 @@ bool Client::readHeader()
         bytesLeft = toRead - totalBytesRead;
 
         bytesRead = recv(_sd, _buffer, bytesLeft, 0);
-        std::cout << "read " << bytesRead << std::endl;
+std::cout << "Read header nb of bytes " << bytesRead << std::endl;
 
         if (bytesRead < 0)
         {
@@ -156,7 +147,6 @@ bool Client::readHeader()
         }
         else if (bytesRead == 0)
         {
-            // No more data (connection closed)
             if (totalBytesRead == 0)
             {
                 std::cout << "Connection closed by client" << std::endl;
@@ -169,20 +159,14 @@ bool Client::readHeader()
 		if (parseHeader())
 			break;
     }
-    std::cout << "test " << totalBytesRead << std::endl;
+    std::cout << "Read header - Total read " << totalBytesRead << std::endl;
     //_buffer[totalBytesRead] = '\0';
-    std::cout << _buffer << std::endl;
+    //std::cout << _buffer << std::endl;
     return true;
 }
 
-void Client::postRessource()
+bool Client::postRessource()
 {
-    if (_request.getHeaders().find("content-length") == _request.getHeaders().end())
-    {
-        _status = 411;
-        return;
-    }
-
     //open file
     std::ofstream outFile(_response.getPath().c_str(), std::ios::binary);
 
@@ -190,16 +174,23 @@ void Client::postRessource()
     {
         std::cerr << "Failed to open the file!" << std::endl;
         _status = 500;
-        return;
+        return true;
     }
 
     std::size_t bytesToWrite = _raw.size() - _cursor;
 
     //we write the body we got from the first recv
-    const unsigned char *c_str = _raw.data();
-    outFile.write(reinterpret_cast<const char*>(c_str + _cursor), bytesToWrite);
+    const unsigned char *cStr = _raw.data();
 
-    size_t bodyLen = Utils::strToNb(_request.getHeaders().find("content-length")->second);
+    std::cout << "size : ----------------------" << _raw.size() << std::endl;
+
+    std::cout << "file name : ----------------------" << _response.getPath().c_str() << std::endl;
+
+    outFile.write(reinterpret_cast<const char*>(cStr + _cursor), bytesToWrite);
+
+    std::cout << "content ;en " << _request.getContentLen() << std::endl;
+
+    size_t bodyLen = _request.getContentLen();
     
     if (bodyLen - bytesToWrite != 0)
     {
@@ -210,9 +201,10 @@ void Client::postRessource()
         for (;;)
         {
             bytesRead = recv(_sd, _buffer + bytesRead, 4096, 0);
-
-            if (bytesRead == -1)
-                //check macro (two are fine other are error)
+            if (bytesRead < 0)
+            {
+                return false;
+            }
             if (bytesRead == 0)
             {
                 // if (totalRead == 0)
@@ -227,6 +219,7 @@ void Client::postRessource()
         delete[] buffer;
     }
     outFile.close();
+    return true;
 }
 
 bool Client::sendData(const std::string& str)
@@ -268,24 +261,46 @@ void Client::execCGI() const
     }
 }
 
+// void Client::setupPipe() const
+// {
+//     int pipefd[2];
+    
+//     if (pipe(pipefd) == -1)
+//     {
+//         perror("pipe");
+//         exit(EXIT_FAILURE);
+//     }
+    
+//     //write(pipefd[1], postData.c_str(), postData.size());
+    
+//     close(pipefd[1]);
+    
+//     dup2(pipefd[0], STDIN_FILENO);
+    
+//     close(pipefd[0]);
+// }
+
 // bool Client::handleCGI() const
 // {
 //     pid_t pid;
 
-//     int pid = fork();
+//     pid = fork();
 
-//     switch (pid)
+//     if (pid == -1)
 //     {
-//         case -1:
-//             perror("fork");
-//             return false;
-//         case 0:
-//             execCGI();
-//             //if we are here execve failed
-//             return true;
-//         default:
-//             int status;
-//             waitpid(-1, &status, 0);
+//         perror("fork");
+//         return false;
+//     }
+//     else if (pid == 0)
+//     {
+//         setupPipe();
+//         execCGI();
+//         exit(EXIT_FAILURE);
+//     }
+//     else
+//     {
+//         int status;
+//         waitpid(pid, &status, 0);
 //     }
 
 // }
@@ -295,8 +310,11 @@ bool Client::sendResponse()
     if (!_mustSend)
         return true;
 
+    std::cout << "Test repsponse" << std::endl;
     if (!sendData(_response.getHeader()))
         return false;
+    std::cout << _status << "debugyessttt" << std::endl;
+
     if (_status == 200)
     {
         // if (_response.getIsCGI())
@@ -310,9 +328,15 @@ bool Client::sendResponse()
         }
         else if (_request.getMethod() == Methods::POST)
         {
-            postRessource();
+            if (!postRessource())
+            {
+                return false;
+            }
+            std::string postRes = "{\"status\": \"success\",\"message\": \"Your request has been processed successfully.\"}";
+            sendData(postRes);
         }
     }
+
     if (_status != 200)
     {
         sendData(_response.getBody());
@@ -325,14 +349,12 @@ bool Client::sendResponse()
 
 bool Client::processRequest(const std::multimap<std::string, VirtualServer>& servers)
 {
+    std::cout << "Test requestt" << std::endl;
+    
     if (!readHeader())
+    {
         return false;
-
-    //std::vector<unsigned char> raw(_buffer, _buffer + std::strlen(_buffer));
-
-    //_request.parse(raw); //in parsing we must check if we found the /r/n empty line (if no, request header too large)
-
-    //_raw = raw;
+    }
     _cursor = _request.getPos();
 
 	const VirtualServer *server = findVirtualServer(servers, _request);
@@ -351,10 +373,6 @@ bool Client::processRequest(const std::multimap<std::string, VirtualServer>& ser
 
     return true;
 }
-//A request line cannot exceed the size of one buffer, or the 414
-// (Request-URI Too Large) error is returned to the client. A request header
-// field cannot exceed the size of one buffer as well, or the 400 (Bad Request)
-// error is returned to the client. Buffers are allocated only on demand.
 
 int Client::getSd() const { return _sd; }
 

@@ -23,7 +23,7 @@ class Client
 		bool 	parseHeader();
 		bool	processRequest(const std::multimap<std::string, VirtualServer>& servers);
 		bool 	sendResponse();
-        void    postRessource();
+        bool    postRessource();
         bool    readHeader();
 		bool 	sendData(const std::string& str);
         bool    serveFile();

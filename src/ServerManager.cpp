@@ -173,19 +173,20 @@ void	ServerManager::run()
         // Handle IO operations on client sockets
         for (std::vector<Client>::iterator client = _clients.begin(); client != _clients.end();)
 		{
-                std::cout << "debug--------------KEEPALIVE--------------------" << std::endl;
             _sd = client->getSd();
             if (FD_ISSET(_sd, &_readfds))
 			{
                 if (!client->processRequest(_servers))
+                {
                     client = this->removeClient(client);
-                else
-                    ++client;
-            }
-			else if (FD_ISSET(_sd, &_writefds))
-			{
-                if (!client->sendResponse())
-                    client = this->removeClient(client);
+                    if (FD_ISSET(_sd, &_writefds))
+                    {
+                        if (!client->sendResponse())
+                            client = this->removeClient(client);
+                        else
+                            ++client;
+                    }
+                }
                 else
                     ++client;
             }

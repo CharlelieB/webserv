@@ -1,31 +1,13 @@
-
-parsing du fichier de configuration (comme le server block de nginx) et regles de parsing a definir (assez libre)
-gestion des sockets (structures, socket(), listen(), accept())
-gestion du non bloquant avec poll() ou autre
-send() et recv() avec le client
-parsing des requetes client (GET, POST, DELETE)
-gestion des differents status (301, 400, 500...)
-gestion de l'acces aux fichiers (envoie et upload)
-gestion des signaux (control C quitter proprement)
-gestion des erreurs de fonction
-gestion de la memoire (pas de crash)
-gestion de la securite de base (restriction d'acces)
-CGI
-stress test
-
-
-Task
-
-Change conf parsing and data structure so ServerManager use a multimap for virtual servers instead of vector
-Change setAddressesToListen() : iterate multimap instead
+keep-alive?
+signal
+Transfer-Encoding: chunked?
+max body
 Think about remove virtualServer block that have wrong addresses? 
 
 
 Challenge
 
-make sure we don't root to a directory with a / at the begginning
 handle non 200 status if host is not found (bad request): how to chose a virtual server?
-
 
 Note
 

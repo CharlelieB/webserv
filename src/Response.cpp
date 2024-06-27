@@ -370,15 +370,17 @@ void Response::manageRouting(const Route* route)
 	}
 
 	normalizePath();
-
-	if (!ressourceExists(_ressourcePath))
-		_statusCode = 404;
 }
 
 void Response::handleRequestByMethod(const Route *route)
 {
 	if (_method == Methods::GET)
 	{
+		if (!ressourceExists(_ressourcePath))
+		{
+			_statusCode = 404;
+			return;
+		}
 		if (_pathIsDir)
 		{
 			if (route && route->getAutoIndex())
@@ -401,6 +403,7 @@ void	Response::build(const VirtualServer& server, const Request &request)
 	_method = request.getMethod();
 	_statusCode = request.getStatus();
 	_ressourcePath = request.getUrl();
+
 std::cout << "ressource path " << _ressourcePath << std::endl;
 
 	const Route *route = server.findRoute(_ressourcePath);

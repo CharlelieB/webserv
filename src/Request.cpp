@@ -18,7 +18,7 @@ std::vector<unsigned char> Request::getLine()
     return line;
 }
 
-int Request::parseBodyLength(const std::string& str)
+ssize_t Request::parseBodyLength(const std::string& str)
 {
     char* p;
     long n = strtol(str.c_str(), &p, 10);
@@ -135,9 +135,9 @@ void Request::checkRequiredHeaderField()
 			return;
 		}
 
-		int contentLen = parseBodyLength(it->second);
+		_contentLen = parseBodyLength(it->second);
 
-		if (contentLen == -1)
+		if (_contentLen == -1)
 		{
 			_status = 400;
 			return;
@@ -166,6 +166,7 @@ bool Request::parse(const std::vector<unsigned char>& buffer)
 void    Request::reset()
 {
     _status = 200;
+    _contentLen = 0;
 	_url.clear();
 	_headers.clear();
     _buffer.clear();
@@ -182,6 +183,8 @@ Methods::eMethods Request::getMethod() const { return _method; }
 
 std::string	Request::getUrl() const { return _url; }
 
+ssize_t Request::getContentLen() const { return _contentLen; };
+
 size_t  Request::getPos() const { return _pos; }
 
-Request::Request(): _status(200), _pos(0) {}
+Request::Request(): _status(200), _contentLen(0), _pos(0) {}
