@@ -118,6 +118,7 @@ bool Client::serveFile()
 bool Client::parseHeader()
 {
 	std::vector<unsigned char> raw(_buffer, _buffer + std::strlen(_buffer));
+    raw.push_back(0);
     _raw = raw;
 	return _request.parse(raw);
 }
@@ -160,8 +161,51 @@ std::cout << "Read header nb of bytes " << bytesRead << std::endl;
 			break;
     }
     std::cout << "Read header - Total read " << totalBytesRead << std::endl;
+    _cursor = _request.getPos();
     //_buffer[totalBytesRead] = '\0';
     //std::cout << _buffer << std::endl;
+    return true;
+}
+
+bool Client::readBody()
+{
+    size_t bodyLen = _request.getContentLen();
+
+    _bodyBuffer = new unsigned char[bodyLen + 50000];
+
+    std::size_t bytesToWrite = _raw.size() - _cursor;
+
+    //we write the body we got from the first recv
+    // Copy initial data from _raw to _bodyBuffer
+    if (bytesToWrite > 0)
+    {
+        std::memcpy(_bodyBuffer, _raw.data() + _cursor, bytesToWrite);
+    }
+
+    // _bodyBuffer = _raw.data() + _cursor;
+
+    std::size_t totalRead = bytesToWrite;
+    std::cout << "test-------------------read" << _bodyBuffer << " " << totalRead << " " << _cursor << " " << bodyLen << std::endl;
+
+    ssize_t bytesRead = 0;
+    std::size_t bytesLeft, chunkSize;
+        
+    //if there is more to read
+    while (totalRead <= bodyLen)
+    {
+     
+        bytesLeft = bodyLen - totalRead;
+        chunkSize = (bytesLeft < ConstVar::bufferSize) ? bytesLeft : ConstVar::bufferSize;
+        bytesRead = recv(_sd, _bodyBuffer + totalRead, chunkSize, 0);
+        std::cout << "test000000 - " << bytesRead << " " << totalRead << " " << bodyLen << " " << bytesLeft << std::endl;
+        if (bytesRead < 0)
+        {
+            return false;
+        }
+        totalRead += bytesRead;
+    }
+    std::cout << " END " << std::endl;
+    _bodyBuffer[totalRead] = 0;
     return true;
 }
 
@@ -177,48 +221,11 @@ bool Client::postRessource()
         return true;
     }
 
-    std::size_t bytesToWrite = _raw.size() - _cursor;
-
-    //we write the body we got from the first recv
-    const unsigned char *cStr = _raw.data();
-
-    std::cout << "size : ----------------------" << _raw.size() << std::endl;
-
     std::cout << "file name : ----------------------" << _response.getPath().c_str() << std::endl;
 
-    outFile.write(reinterpret_cast<const char*>(cStr + _cursor), bytesToWrite);
-
-    std::cout << "content ;en " << _request.getContentLen() << std::endl;
-
-    size_t bodyLen = _request.getContentLen();
-    
-    if (bodyLen - bytesToWrite != 0)
-    {
-        //ssize_t totalRead = 0, bytesRead = 0;
-        ssize_t bytesRead = 0;
-        
-        char* buffer = new char[bodyLen + 1];
-        for (;;)
-        {
-            bytesRead = recv(_sd, _buffer + bytesRead, 4096, 0);
-            if (bytesRead < 0)
-            {
-                return false;
-            }
-            if (bytesRead == 0)
-            {
-                // if (totalRead == 0)
-                //     //connection closed
-                //close fd, remove client, communication is done
-                break;
-            }
-
-            //totalRead += bytesRead;
-        }
-        outFile.write(buffer, bytesRead);
-        delete[] buffer;
-    }
+    outFile.write(reinterpret_cast<const char*>(_bodyBuffer), _request.getContentLen());
     outFile.close();
+    delete[] _bodyBuffer;
     return true;
 }
 
@@ -351,11 +358,10 @@ bool Client::processRequest(const std::multimap<std::string, VirtualServer>& ser
 {
     std::cout << "Test requestt" << std::endl;
     
-    if (!readHeader())
+    if (!readHeader() || !readBody())
     {
         return false;
     }
-    _cursor = _request.getPos();
 
 	const VirtualServer *server = findVirtualServer(servers, _request);
 

@@ -27,6 +27,7 @@ class Client
         bool    readHeader();
 		bool 	sendData(const std::string& str);
         bool    serveFile();
+		bool 	readBody();
 
 		void	setCGIEnv(std::vector<std::string>& env) const;
 		bool 	handleCGI() const;
@@ -42,6 +43,7 @@ class Client
 		std::vector<unsigned char> _raw;
 		int _status;
 		char _buffer[ConstVar::bufferSize + 1];
+		unsigned char *_bodyBuffer;
         size_t _cursor;
 		Request _request;
 		Response _response;
